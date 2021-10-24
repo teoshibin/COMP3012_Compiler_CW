@@ -53,6 +53,7 @@ Of course, `parse` will make use of the scanner. You can
 use the following definition:
 -}
 
+-- full parse
 parse :: String -> AST
 parse s =
   case parseExp (scan s) of
@@ -72,29 +73,38 @@ prefer, delete the below lines and do it from scratch.
 
 -}
 
+-- Exp
 parseExp :: [Token] -> Maybe (AST, [Token])
-parseExp = undefined
+parseExp ts = case parseMExp ts of
+  Nothing -> Nothing
+  Just(a, ts1) -> case parsePlusOrMinus ts1 of
+    Nothing -> Just(a, ts1)
+    Just(b, ts2) -> case parseExp ts2 of
+      Nothing -> Nothing
+      Just(c, ts3) -> Just(BinOp b a c, ts3)
 
-
+-- Mexp
 parseMExp :: [Token] -> Maybe (AST, [Token])
-parseMExp = undefined
+parseMExp ts = case parseTerm ts of
+  Nothing -> Nothing
+  Just(a, ts1) -> case parseTimesOrDivide ts1 of
+    Nothing -> Just(a, ts1) -- even though this fail but it can still be term so return term
+    Just(b, ts2) -> case parseMExp ts2 of
+      Nothing -> Nothing
+      Just(c, ts3) -> Just (BinOp b a c, ts3)
 
+-- Term
 parseTerm :: [Token] -> Maybe (AST, [Token])
 parseTerm ts =
   case parseIntLit ts of
     Just(n, ts) -> Just(LitInteger n, ts)
-    Nothing -> case perseTerm ts of
-      Just(Operator Minus : ts) -> Just(Negation, parseTerm ts)
-      Nothing -> Nothing
+    Nothing -> case parseNegTerm ts of
+      Just(UnOp Negation t1, ts1) -> Just(UnOp Negation t1, ts1)
+      Nothing -> case parseParenExp ts of
+        Just(t2, ts2) -> Just(t2, ts2)
+        Nothing -> Nothing
 
-
-
-
-parseIntLit :: [Token] -> Maybe (Int, [Token])
-parseIntLit (t:ts) = case t of
-    Number n -> Just(n, ts)
-    _ -> Nothing
-
+-- parse BinOperator
 parseBinOp :: [Token] -> Maybe (BinOperator,[Token])
 parseBinOp (Operator t:ts) = case t of
     Plus -> Just(Addition, ts)
@@ -103,9 +113,61 @@ parseBinOp (Operator t:ts) = case t of
     Times -> Just(Multiplication, ts)
 parseBinOp _ = Nothing
 
+-- parse BinOperator if it is plus or minus
+parsePlusOrMinus :: [Token] -> Maybe (BinOperator, [Token])
+parsePlusOrMinus ts = case parseBinOp ts of
+  Nothing -> Nothing
+  Just(a, ts) -> if a == Addition || a == Subtraction
+    then Just(a, ts)
+    else Nothing
+
+-- parse BinOperator if it is times or divide
+parseTimesOrDivide :: [Token] -> Maybe (BinOperator, [Token])
+parseTimesOrDivide ts = case parseBinOp ts of
+  Nothing -> Nothing
+  Just(a, ts1) -> if a == Multiplication || a == Division
+    then Just(a , ts1)
+    else Nothing
+
+-- parse number (parseTerm)
+parseIntLit :: [Token] -> Maybe (Int, [Token])
+parseIntLit (Number n : ts) = Just(n, ts)
+parseIntLit _ = Nothing
+
+-- parse negative term (parseTerm)
+parseNegTerm :: [Token] -> Maybe (AST, [Token])
+parseNegTerm ts = case parseUnOp ts of
+  Nothing -> Nothing
+  Just(Negation, ts') -> case parseTerm ts' of
+    Nothing -> Nothing
+    Just(t, ts1) -> Just(UnOp Negation t, ts1)
+
+-- parse parenthesis sindwiched expression (parseTerm)
+parseParenExp :: [Token] -> Maybe (AST, [Token])
+parseParenExp ts = case parseOpenPar ts of
+  Nothing -> Nothing
+  Just ts' -> case parseExp ts' of
+    Nothing -> Nothing
+    Just(t, ts1) -> case parseClosedPar ts1 of
+      Nothing -> Nothing
+      Just ts2 -> Just(t, ts2)
+
+-- parse minus token (parseNegTerm)
 parseUnOp :: [Token] -> Maybe(UnOperator, [Token])
 parseUnOp (Operator Minus : ts) = Just(Negation, ts)
 parseUnOp _ = Nothing
+
+-- parse open parenthesis (parseParenExp)
+parseOpenPar :: [Token] -> Maybe[Token]
+parseOpenPar (t:ts) = case t of
+  Parenthesis Open -> Just ts
+  _ -> Nothing
+
+-- parse closed parenthesis (parseParenExp)
+parseClosedPar :: [Token] -> Maybe[Token]
+parseClosedPar (t:ts) = case t of
+  Parenthesis Closed -> Just ts
+  _ -> Nothing
 
 {- If all of the above works: Can you extend your code
 such that parentheses can be parsed as well?
