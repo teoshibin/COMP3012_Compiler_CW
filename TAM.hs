@@ -1,5 +1,10 @@
 module TAM where
 
+{-
+executeTAM [LOADL 5, LOADL 8, LOADL 7, ADD, LOADL 2, SUB, LOADL 4, DIV, MUL]
+= [15]
+-}
+
 data TamInst =
     LOADL Int
     | ADD
@@ -11,19 +16,15 @@ data TamInst =
 
 type Stack = [Int]
 
-executeAll :: [TamInst] -> Stack
-executeAll tp = execute tp []
+executeTAM :: [TamInst] -> Stack
+executeTAM = foldl (flip execute) []
 
-execute :: [TamInst] -> Stack -> Stack
-execute [] s = s
-execute (LOADL n: tp) s = execute tp (n:s)
-execute (NEG:tp) (n:s) = execute tp (-n:s)
-execute (op:tp) (a:b:s) = execute tp (absOptoConcrOp op b a : s)
-
-absOptoConcrOp :: TamInst -> Int -> Int -> Int
-absOptoConcrOp ADD = (+)
-absOptoConcrOp SUB = (-)
-absOptoConcrOp MUL = (*)
-absOptoConcrOp DIV = div
+execute :: TamInst -> Stack -> Stack
+execute (LOADL n) s = n:s
+execute NEG (n:s) = -n:s
+execute ADD (a:b:s) = b + a : s
+execute SUB (a:b:s) = b - a : s
+execute MUL (a:b:s) = b * a : s
+execute DIV (a:b:s) = b `div` a : s
 
 
