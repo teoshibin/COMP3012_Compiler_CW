@@ -1,9 +1,10 @@
 {-
-Compilers Course (COMP3012), 2021,
 
-Written by Venanzio Capretta
+Compilers Course (COMP3012), 2021
+  Venanzio Capretta
+  Nicolai Kraus
 
-Functional parsing library
+Functional parsing library by Venanzio Capretta,
 based on chapter 13 of "Programming in Haskell" (2nd edition)
 Graham Hutton, Cambridge University Press, 2016.
 -}
@@ -29,31 +30,23 @@ item = P (\inp -> case inp of
 
 instance Functor Parser where
   -- fmap :: (a -> b) -> Parser a -> Parser b
-  fmap g pa =
-    P (\src ->
-         [ (g x, src1) | (x,src1) <- parse pa src ])
+  fmap g pa = P (\src -> [ (g x, src1) | (x,src1) <- parse pa src ])
 
 instance Applicative Parser where
   -- pure :: a -> Parser a
   pure x = P (\src -> [(x,src)])
 
-  -- (<*>) :: Parser (a -> b) -> Parser a
-  --                          -> Parser b
-  pf <*> pa =
-    P (\src -> [ (f x,src2) |
-                   (f,src1) <- parse pf src,
-                   (x,src2) <- parse pa src1 ] )
+  -- (<*>) :: Parser (a -> b) -> Parser a -> Parser b
+  pf <*> pa = P (\src -> [ (f x,src2) | (f,src1) <- parse pf src,
+                                        (x,src2) <- parse pa src1 ] )
 
 instance Monad Parser where
   -- return :: a -> Parser a
   -- return = pure
 
-  -- (>>=) :: Parser a -> (a -> Parser b)
-  --                   -> Parser b
-  pa >>= fpb =
-    P (\src -> [r | (x,src1) <- parse pa src,
-                           r <- parse (fpb x) src1 ]
-      )
+  -- (>>=) :: Parser a -> (a -> Parser b) -> Parser b
+  pa >>= fpb = P (\src -> [r | (x,src1) <- parse pa src,
+                               r <- parse (fpb x) src1 ] )
 
 --Making choices
 
@@ -85,8 +78,7 @@ p1 <||> p2 = P (\inp -> (parse p1 inp) ++ (parse p2 inp))
 -- verify that the parsed object satisfy a condition
 satisfy :: Parser a -> (a -> Bool) -> Parser a
 satisfy p cond = do x <- p
-                    if cond x then return x
-                              else empty
+                    if cond x then return x else empty
 
 sat :: (Char -> Bool) -> Parser Char
 sat = satisfy item
