@@ -80,8 +80,9 @@ satisfy :: Parser a -> (a -> Bool) -> Parser a
 satisfy p cond = do x <- p
                     if cond x then return x else empty
 
+-- satisfy single character
 sat :: (Char -> Bool) -> Parser Char
-sat = satisfy item
+sat cond = satisfy item cond
 
 digit :: Parser Char
 digit = sat isDigit

@@ -13,7 +13,7 @@ Uses functional parsers.
 
 module ExpParser where
 
-import FunParser
+import FunParser ( parens, symbol, natural, choice, parse, Parser )
 import Control.Applicative
 
 data BinOperator = Addition | Subtraction | Multiplication | Division
@@ -57,13 +57,13 @@ Conditionals must be in parentheses, except at the top level
 
 expr :: Parser AST
 expr = do b <- bexp
-          (do symbol "?"
-              e0 <- bexp
-              symbol ":"
-              e1 <- bexp
-              return (Conditional b e0 e1)
+          do symbol "?"
+             e0 <- bexp
+             symbol ":"
+             e1 <- bexp
+             return (Conditional b e0 e1)
            <|>
-           return b)
+           return b
 
 bexp :: Parser AST
 bexp = do e0 <- cexp
@@ -97,7 +97,7 @@ bterm = do e0 <- aexp
                e1 <- aexp
                return (BinOp op e0 e1)
             <|>
-            return e0) 
+            return e0)
 
 
 addminus :: Parser BinOperator
