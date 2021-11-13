@@ -30,7 +30,7 @@ data BinOperator = Addition | Subtraction | Multiplication | Division
                  | Conjunction | Disjunction
                  | LssOp | LeqOp | GtrOp | GeqOp | EqOp | NeqOp
                  deriving (Eq,Show,Enum)
-                    
+
 
 -- parse mini triangle
 parseMT :: String -> AST
@@ -60,10 +60,10 @@ let , in , var , if , then , else , while , do , getint , printint , begin , end
 -- parse entire program
 programParser :: Parser AST
 programParser = do symbol "let"
-                   a <- declarationsParser
+                   d <- declarationsParser
                    symbol "in"
-                   b <- commandParser
-                   return (Program a b)
+                   c <- commandParser
+                   return (Program d c)
 
 -- parse one declaration
 declarationParser :: Parser Declaration
@@ -75,45 +75,65 @@ declarationsParser = undefined
 
 -- parse all types of Command
 commandParser :: Parser Command
-commandParser = do assignParser 
+commandParser = do assignParser
             <|> do ifParser
             <|> do whileParser
-            <|> do 
+            <|> do getIntParser
+            <|> do printIntParser
 
 assignParser :: Parser Command
-assignParser = do a <- keyLessIdentifier
+assignParser = do i <- keyLessIdentifier
                   symbol ":="
-                  b <- expr
-                  return (CmdAssign a b)
+                  e <- expr
+                  return (CmdAssign i e)
 
 ifParser :: Parser Command
 ifParser = do symbol "if"
-              a <- expr
+              e <- expr
               symbol "then"
-              b <- commandParser
+              c0 <- commandParser
               symbol "else"
-              c <- commandParser
-              return (CmdIf a b c)
+              c1 <- commandParser
+              return (CmdIf e c0 c1)
 
 whileParser :: Parser Command
 whileParser = do symbol "while"
-                 a <- expr
+                 e <- expr
                  symbol "do"
-                 b <- commandParser
-                 return (CmdWhile a b)
+                 c <- commandParser
+                 return (CmdWhile e c)
 
 getIntParser :: Parser Command
 getIntParser = do symbol "getint"
                   symbol "("
-                  a <- keyLessIdentifier
+                  i <- keyLessIdentifier
                   symbol ")"
-                  return (CmdGetInt a)
+                  return (CmdGetInt i)
 
+printIntParser :: Parser Command
+printIntParser = do symbol "printint"
+                    symbol "("
+                    e <- expr
+                    symbol ")"
+                    return (CmdPrintInt e)
 
+beginParser :: Parser Command
+beginParser = do symbol "begin"
+                 cs <- commandsParser
+                 symbol "end"
+                 return (CmdBegin cs)
+
+commandsParser :: Parser [Command]
+commandsParser = do c <- commandParser
+                    do symbol ";"
+                       cs <- commandsParser
+                       return (c:cs)
+                       <|>
+                       return [c]
 
 -- TODO create identifier that stop keywords from being parsed
 keyLessIdentifier :: Parser String
-keyLessIdentifier = keyLessIdentifier
+keyLessIdentifier = identifier
 
 -- expression
 
