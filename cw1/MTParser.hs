@@ -80,7 +80,7 @@ programParser = do symbol "let"
 -- parse one declaration
 declarationParser :: Parser Declaration
 declarationParser = do symbol "var"
-                       i <- keyLessIdentifier
+                       i <- varNameParser
                        do symbol ":="
                           e <- expr
                           return (Var i e)
@@ -107,7 +107,7 @@ commandParser = do ifParser
 
 -- variable assignment
 assignParser :: Parser Command
-assignParser = do i <- keyLessIdentifier
+assignParser = do i <- varNameParser
                   symbol ":="
                   e <- expr
                   return (CmdAssign i e)
@@ -135,7 +135,7 @@ whileParser = do symbol "while"
 getIntParser :: Parser Command
 getIntParser = do symbol "getint"
                   symbol "("
-                  i <- keyLessIdentifier
+                  i <- varNameParser
                   symbol ")"
                   return (CmdGetInt i)
 
@@ -168,8 +168,8 @@ commandsParser = do c <- commandParser
 -- identifier with addons
 
 -- TODO create identifier that stop keywords from being parsed
-keyLessIdentifier :: Parser String
-keyLessIdentifier = identifier
+varNameParser :: Parser String
+varNameParser = identifier
 
 -- expression
 
@@ -260,5 +260,5 @@ aterm = (natural >>= return . LitInteger)
                 b <- aterm
                 return (UnOp NegBool b))
         <|> parens expr
-        <|> (do i <- keyLessIdentifier
+        <|> (do i <- varNameParser
                 return (DeclaredVar i))
