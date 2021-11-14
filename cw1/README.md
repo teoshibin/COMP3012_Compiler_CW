@@ -31,7 +31,7 @@ Venanzio Capretta / Nicolai Kraus
 
 6. **Main.hs**
 
-    Main file. You can use a command such as
+    Main file. You can use a command such as (or run `cpcpl` batch for the same result)
     ```batch
         ghc Main -o mtc
     ```
