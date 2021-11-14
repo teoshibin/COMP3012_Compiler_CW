@@ -32,6 +32,23 @@ data BinOperator = Addition | Subtraction | Multiplication | Division
                  | LssOp | LeqOp | GtrOp | GeqOp | EqOp | NeqOp
                  deriving (Eq,Show,Enum)
 
+keywordStrings :: [String]
+keywordStrings =  [ "let"
+                  , "in"
+                  , "var"
+                  , "if"
+                  , "then"
+                  , "else"
+                  , "while"
+                  , "do"
+                  , "getint"
+                  , "printint"
+                  , "begin"
+                  , "end"
+                  ]
+
+-- declaredVarNames :: [String]
+-- declaredVarNames = []
 
 -- parse mini triangle
 mtParse :: String -> AST
@@ -139,9 +156,6 @@ getIntParser = do symbol "getint"
                   symbol ")"
                   return (CmdGetInt i)
 
-getIntHelper :: Parser String
-getIntHelper = do symbol "getint"
-
 -- get expression for future IO output
 printIntParser :: Parser Command
 printIntParser = do symbol "printint"
@@ -166,10 +180,15 @@ commandsParser = do c <- commandParser
                        return [c]
 
 -- identifier with addons
-
--- TODO create identifier that stop keywords from being parsed
 varNameParser :: Parser String
-varNameParser = identifier
+varNameParser = do i <- identifier
+                   if isValidName i then return i else empty
+
+isValidName :: String -> Bool
+isValidName n 
+   | n `elem` keywordStrings = False
+   | otherwise = True
+
 
 -- expression
 
@@ -262,3 +281,12 @@ aterm = (natural >>= return . LitInteger)
         <|> parens expr
         <|> (do i <- varNameParser
                 return (DeclaredVar i))
+
+-- declaredNameParser :: Parser String
+-- declaredNameParser = do i <- varNameParser
+--                         if isDeclaredVar i then return i else empty
+
+-- isDeclaredVar :: String -> Bool
+-- isDeclaredVar n
+--    | n `elem` declaredVarNames = True
+--    | otherwise = False

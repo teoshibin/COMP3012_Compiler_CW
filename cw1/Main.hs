@@ -73,8 +73,8 @@ main = do
             print "code for evaluate not done yet"
             -- putStrLn ("Evaluating Expression: " ++ show (evaluate (mtParse src)))
           else if Parse `elem` ops
-            then putStrLn ("\ninput: \n\n" ++ src) 
-              >> putStrLn ("\nParsed mt: \n\n" ++ show (mtParse src))
+            then putStrLn ("\n== Parser ==\n\nMT: \n\n" ++ src) 
+              >> putStrLn ("\nAST: \n\n" ++ show (mtParse src))
             else writeFile (fileName++".tam") (compileArithTAM src)
               >> putStrLn ("compiled to TAM file: " ++ fileName ++ ".tam")
 
