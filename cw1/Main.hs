@@ -12,7 +12,8 @@ Main executable.
 
 module Main where
 
-import ExpParser
+-- import ExpParser
+import MTParser
 import ExpCompiler
 import TAM
 
@@ -29,17 +30,17 @@ import Data.Char
    --trace : trace the execution of .tam code
 -}
 
-data FileType = EXP | TAM
+data FileType = TAM | MT
   deriving (Eq,Show)
 
-data Option = Trace | Run | Evaluate
+data Option = Trace | Run | Evaluate | Parse
   deriving (Eq,Show)
 
 main :: IO ()
 main = do
   args <- getArgs
   let inputName = head args
-  
+
   let (fileName,extension) = fileNE args
       ops = options args
 
@@ -55,15 +56,27 @@ main = do
       src <- readFile (fileName++".tam")
       let tam = parseTAM src
       tamFun tam
-    EXP -> do
-      src <- readFile (fileName++".exp")
+    -- EXP -> do
+    --   src <- readFile (fileName++".exp")
+    --   if Run `elem` ops
+    --     then tamFun (compArith src)
+    --     else if Evaluate `elem` ops
+    --       then putStrLn ("Evaluating Expression: " ++ show (evaluate (expParse src)))
+    --       else writeFile (fileName++".tam") (compileArithTAM src)
+    --            >> putStrLn ("compiled to TAM file: " ++ fileName ++ ".tam")
+    MT -> do
+      src <- readFile (fileName++".mt")
       if Run `elem` ops
         then tamFun (compArith src)
-        else if Evaluate `elem` ops
-          then putStrLn ("Evaluating Expression: " ++ show (evaluate (expParse src)))
-          else writeFile (fileName++".tam") (compileArithTAM src)
-               >> putStrLn ("compiled to TAM file: " ++ fileName ++ ".tam")
-
+        else if Evaluate `elem` ops 
+          then 
+            print "code for evaluate not done yet"
+            -- putStrLn ("Evaluating Expression: " ++ show (evaluate (mtParse src)))
+          else if Parse `elem` ops
+            then putStrLn ("\ninput: \n\n" ++ src) 
+              >> putStrLn ("\nParsed mt: \n\n" ++ show (mtParse src))
+            else writeFile (fileName++".tam") (compileArithTAM src)
+              >> putStrLn ("compiled to TAM file: " ++ fileName ++ ".tam")
 
 -- Finding the base name and extension of a file name
 
@@ -72,10 +85,11 @@ baseName = takeWhile (/='.')
 
 fileExt :: String -> String
 fileExt fn = let ext = dropWhile (/='.') fn
-             in if ext == "" then ".exp" else ext
+             in if ext == "" then ".mt" else ext
 
 extType :: String -> Maybe FileType
-extType ".exp" = Just EXP
+-- extType ".exp" = Just EXP
+extType ".mt" = Just MT
 extType ".tam" = Just TAM
 extType _ = Nothing
 
@@ -93,6 +107,7 @@ parseOption :: String -> Maybe Option
 parseOption "--trace" = Just Trace
 parseOption "--run" = Just Run
 parseOption "--evaluate" = Just Evaluate
+parseOption "--parse" = Just Parse
 parseOption _ = Nothing
 
 
