@@ -12,28 +12,28 @@ app (S f) = f
 
 instance Functor (ST st) where
   -- fmap :: (a -> b) -> ST st a -> ST st b
-  fmap g sta = S(\s ->
-    let (x,s1) = app sta s
-    in (g x , s1))
+    fmap g sta = S(\s ->
+        let (x,s1) = app sta s
+        in (g x , s1))
 
 instance Applicative (ST st) where
-  pure x = S(\s -> (x,s))
+    pure x = S(\s -> (x,s))
 
   -- (<*>) :: (ST st (a -> b)) -> (ST st a)
   --                           -> (ST st b)
-  stf <*> sta = S(\s ->
-    let (f,s1) = app stf s
-        (x,s2) = app sta s1
-    in (f x , s2))
+    stf <*> sta = S(\s ->
+        let (f,s1) = app stf s
+            (x,s2) = app sta s1
+        in (f x , s2))
 
 instance Monad (ST st) where
-  return = pure
+    return = pure
 
-  -- (>>=) :: (ST st a) -> (a -> ST st b) -> ST st b
-  sta >>= f = S(\s ->
-    let (x,s1) = app sta s
-        (y,s2) = app (f x) s1
-    in (y,s2))
+    -- (>>=) :: (ST st a) -> (a -> ST st b) -> ST st b
+    sta >>= f = S(\s ->
+        let (x,s1) = app sta s
+            (y,s2) = app (f x) s1
+        in (y,s2))
 
 stUpdate :: st -> ST st ()
 stUpdate s = S(\_ -> ((),s))

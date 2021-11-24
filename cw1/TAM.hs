@@ -24,32 +24,32 @@ type LabelName = String -- TAM Label
 
 -- Instructions of TAM language
 data TAMInst
-  -- stack operations
-  = LOADL TAMInt       -- push value on to the Stack
-  | LOAD Address      -- copy value from address on to the stack
-  | STORE Address     -- pop stack and store to address
-  | GETINT            -- read value from terminal push on to the stack
-  | PUTINT            -- pop stack and print pop value
-  -- flow control
-  | JUMP LabelName    -- unconditional jump
-  | JUMPIFZ LabelName -- pop stack and jump if the pop value is 0
-  | Label LabelName   -- label for jumping
-  | HALT              -- stop execution     
-  -- Arithmetic operations
-  | ADD               -- adds two top values in the stack
-  | SUB               -- subtract second element of stack from top
-  | MUL               -- multiplies top values in the stack
-  | DIV               -- divides the second value by the top (integer division)
-  | NEG               -- negates the top of the stack
-  -- Boolean operations
-  | AND               -- Boolean conjunction (non-zero values are True)
-  | OR                -- Boolean disjunction
-  | NOT               -- Boolean negation
-  -- Relational operations
-  | LSS               -- order operation <
-  | GTR               -- order operation >
-  | EQL               -- equality operator
-  deriving (Eq,Show)
+    -- stack operations
+    = LOADL TAMInt       -- push value on to the Stack
+    | LOAD Address      -- copy value from address on to the stack
+    | STORE Address     -- pop stack and store to address
+    | GETINT            -- read value from terminal push on to the stack
+    | PUTINT            -- pop stack and print pop value
+    -- flow control
+    | JUMP LabelName    -- unconditional jump
+    | JUMPIFZ LabelName -- pop stack and jump if the pop value is 0
+    | Label LabelName   -- label for jumping
+    | HALT              -- stop execution     
+    -- Arithmetic operations
+    | ADD               -- adds two top values in the stack
+    | SUB               -- subtract second element of stack from top
+    | MUL               -- multiplies top values in the stack
+    | DIV               -- divides the second value by the top (integer division)
+    | NEG               -- negates the top of the stack
+    -- Boolean operations
+    | AND               -- Boolean conjunction (non-zero values are True)
+    | OR                -- Boolean disjunction
+    | NOT               -- Boolean negation
+    -- Relational operations
+    | LSS               -- order operation <
+    | GTR               -- order operation >
+    | EQL               -- equality operator
+    deriving (Eq,Show)
 
 -- TAM execution state
 type Stack = [TAMInt]
@@ -57,9 +57,9 @@ type TAMProgram = [TAMInst]
 type Counter = Int
 
 data TAMState = TAMState {
-  ts :: TAMProgram,
-  tsCounter :: Counter,
-  tsStack :: Stack
+    ts :: TAMProgram,
+    tsCounter :: Counter,
+    tsStack :: Stack
 } deriving(Eq, Show)
 
 -- TAM state operation
@@ -68,7 +68,7 @@ tsPush n t = t {tsStack = n : tsStack t}
 
 tsPop :: TAMState -> (TAMInt, TAMState)
 tsPop t = (head s, t {tsStack = tail s})
-  where s = tsStack t
+    where s = tsStack t
 -- TODO could use state transformer monad 
 -- type TAMSt a = ST TAMState a
 -- tsPop1 :: TAMSt MTInst
@@ -182,25 +182,26 @@ execTAM = foldl execute
 execTrace :: Stack -> [TAMInst] -> [(TAMInst,Stack)]
 execTrace stk [] = []
 execTrace stk (i:is) =
-  let stk' = execute stk i
-      trace' = execTrace stk' is
-  in ((i,stk'):trace')
+    let stk' = execute stk i
+        trace' = execTrace stk' is
+    in ((i,stk'):trace')
 
 -- Printing pairs of value in a two-column table
 printTable :: [(String,String)] -> String
-printTable pairs = intercalate "\n" $ map (\(a,b) -> fitStr a ++ b) pairs
-  where n = maximum (map (length.fst) pairs) + 5
-        fitStr a = a ++ replicate (n - length a) ' '
+printTable pairs = 
+    intercalate "\n" $ map (\(a,b) -> fitStr a ++ b) pairs
+        where   n = maximum (map (length.fst) pairs) + 5
+                fitStr a = a ++ replicate (n - length a) ' '
 
 -- print the trace of the computation, return the final stack
 traceTAM :: Stack -> [TAMInst] -> IO Stack
 traceTAM stk tam = do
-  let trace = execTrace stk tam
-      traceStr = ("Initial stack:", show stk) :
-                 map (\(a,b)->(show a,show b)) trace
-      finalStk = snd (last trace)
-  putStrLn (printTable traceStr)
-  return finalStk
+    let trace = execTrace stk tam
+        traceStr = ("Initial stack:", show stk) :
+                    map (\(a,b)->(show a,show b)) trace
+        finalStk = snd (last trace)
+    putStrLn (printTable traceStr)
+    return finalStk
 
 -- writing out a TAM program
 writeTAM :: [TAMInst] -> String
@@ -209,16 +210,16 @@ writeTAM = foldl (\s inst -> s ++ show inst ++ "\n") ""
 -- parsing a TAM program
 parseTAM :: String -> [TAMInst]
 parseTAM = pTAM . words where
-  pTAM ("LOADL":x:src) = LOADL (read x) : pTAM src
-  pTAM ("ADD":src) = ADD : pTAM src
-  pTAM ("SUB":src) = SUB : pTAM src
-  pTAM ("MUL":src) = MUL : pTAM src
-  pTAM ("DIV":src) = DIV : pTAM src
-  pTAM ("NEG":src) = NEG : pTAM src
-  pTAM ("AND":src) = AND : pTAM src
-  pTAM ("OR" :src) = OR  : pTAM src
-  pTAM ("NOT":src) = NOT : pTAM src
-  pTAM ("LSS":src) = LSS : pTAM src
-  pTAM ("GTR":src) = GTR : pTAM src
-  pTAM ("EQL":src) = EQL : pTAM src
-  pTAM _ = []
+    pTAM ("LOADL":x:src) = LOADL (read x) : pTAM src
+    pTAM ("ADD":src) = ADD : pTAM src
+    pTAM ("SUB":src) = SUB : pTAM src
+    pTAM ("MUL":src) = MUL : pTAM src
+    pTAM ("DIV":src) = DIV : pTAM src
+    pTAM ("NEG":src) = NEG : pTAM src
+    pTAM ("AND":src) = AND : pTAM src
+    pTAM ("OR" :src) = OR  : pTAM src
+    pTAM ("NOT":src) = NOT : pTAM src
+    pTAM ("LSS":src) = LSS : pTAM src
+    pTAM ("GTR":src) = GTR : pTAM src
+    pTAM ("EQL":src) = EQL : pTAM src
+    pTAM _ = []

@@ -27,9 +27,10 @@ evaluate :: Expr -> MTInt
 evaluate (LitInteger x)   = x
 evaluate (BinOp op t1 t2) = binOpEv op (evaluate t1) (evaluate t2)
 evaluate (UnOp op t)      = unOpEv op (evaluate t)
-evaluate (TernaryIf b t1 t2) = if (evaluate b) /= 0
-                                 then (evaluate t1)
-                                 else (evaluate t2)
+evaluate (TernaryIf b t1 t2) =
+    if (evaluate b) /= 0
+        then (evaluate t1)
+        else (evaluate t2)
 
 binOpEv :: BinOperator -> MTInt -> MTInt -> MTInt
 binOpEv Addition       = (+)

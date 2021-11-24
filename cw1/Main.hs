@@ -31,52 +31,49 @@ import Data.Char
 -}
 
 data FileType = TAM | MT
-  deriving (Eq,Show)
+    deriving (Eq,Show)
 
 data Option = Trace | Run | Evaluate | Parse
-  deriving (Eq,Show)
+    deriving (Eq,Show)
 
 main :: IO ()
 main = do
-  args <- getArgs
-  let inputName = head args
-
-  let (fileName,extension) = fileNE args
-      ops = options args
-
-  let tamFun :: [TAMInst] -> IO ()
-      tamFun = \tam ->
-        if Trace `elem` ops
-        then do stk <- traceTAM [] tam
-                putStrLn ("Final result: " ++ (show (head stk)))
-        else putStrLn ("Executing TAM code: " ++ (show $ head $ execTAM [] tam))
-
-  case extension of
-    TAM -> do
-      src <- readFile (fileName++".tam")
-      let tam = parseTAM src
-      tamFun tam
-    -- EXP -> do
-    --   src <- readFile (fileName++".exp")
-    --   if Run `elem` ops
-    --     then tamFun (compArith src)
-    --     else if Evaluate `elem` ops
-    --       then putStrLn ("Evaluating Expression: " ++ show (evaluate (expParse src)))
-    --       else writeFile (fileName++".tam") (compileArithTAM src)
-    --            >> putStrLn ("compiled to TAM file: " ++ fileName ++ ".tam")
-    MT -> do
-      src <- readFile (fileName++".mt")
-      if Run `elem` ops
-        then tamFun (compArith src)
-        else if Evaluate `elem` ops 
-          then 
-            print "code for evaluate not done yet"
-            -- putStrLn ("Evaluating Expression: " ++ show (evaluate (mtParse src)))
-          else if Parse `elem` ops
-            then putStrLn ("\n== Parser ==\n\nMT: \n\n" ++ src) 
-              >> putStrLn ("\nAST: \n\n" ++ show (mtParse src))
-            else writeFile (fileName++".tam") (compileArithTAM src)
-              >> putStrLn ("compiled to TAM file: " ++ fileName ++ ".tam")
+    args <- getArgs
+    let inputName = head args
+    let (fileName,extension) = fileNE args
+        ops = options args
+    let tamFun :: [TAMInst] -> IO ()
+        tamFun = \tam ->
+            if Trace `elem` ops
+            then do stk <- traceTAM [] tam
+                    putStrLn ("Final result: " ++ (show (head stk)))
+            else putStrLn ("Executing TAM code: " ++ (show $ head $ execTAM [] tam))
+    case extension of
+        TAM -> do
+            src <- readFile (fileName++".tam")
+            let tam = parseTAM src
+            tamFun tam
+        -- EXP -> do
+        --   src <- readFile (fileName++".exp")
+        --   if Run `elem` ops
+        --     then tamFun (compArith src)
+        --     else if Evaluate `elem` ops
+        --       then putStrLn ("Evaluating Expression: " ++ show (evaluate (expParse src)))
+        --       else writeFile (fileName++".tam") (compileArithTAM src)
+        --            >> putStrLn ("compiled to TAM file: " ++ fileName ++ ".tam")
+        MT -> do
+            src <- readFile (fileName++".mt")
+            if Run `elem` ops
+            then tamFun (compArith src)
+            else if Evaluate `elem` ops
+                then
+                print "code for evaluate not done yet"
+                -- putStrLn ("Evaluating Expression: " ++ show (evaluate (mtParse src)))
+                else if Parse `elem` ops
+                then putStrLn ("\n== Parser ==\n\nMT: \n\n" ++ src)
+                    >> putStrLn ("\nAST: \n\n" ++ show (mtParse src))
+                else writeFile (fileName++".tam") (compileArithTAM src)
+                    >> putStrLn ("compiled to TAM file: " ++ fileName ++ ".tam")
 
 -- Finding the base name and extension of a file name
 
@@ -84,8 +81,9 @@ baseName :: String -> String
 baseName = takeWhile (/='.')
 
 fileExt :: String -> String
-fileExt fn = let ext = dropWhile (/='.') fn
-             in if ext == "" then ".mt" else ext
+fileExt fn =
+    let ext = dropWhile (/='.') fn
+    in if ext == "" then ".mt" else ext
 
 extType :: String -> Maybe FileType
 -- extType ".exp" = Just EXP
@@ -96,12 +94,14 @@ extType _ = Nothing
 parseFileName :: String -> Maybe (String,FileType)
 parseFileName arg = do
   if isAlpha (head arg)
-    then let name = baseName arg
-             ext  = extType (fileExt arg)
-         in case ext of
-              Just t -> Just (name,t)
-              Nothing -> Nothing
-    else Nothing
+    then
+        let name = baseName arg
+            ext  = extType (fileExt arg)
+        in case ext of
+            Just t -> Just (name,t)
+            Nothing -> Nothing
+    else
+        Nothing
 
 parseOption :: String -> Maybe Option
 parseOption "--trace" = Just Trace

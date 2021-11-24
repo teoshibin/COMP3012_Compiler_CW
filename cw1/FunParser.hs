@@ -22,9 +22,11 @@ parse :: Parser a -> String -> [(a,String)]
 parse (P p) = p
 
 item :: Parser Char
-item = P (\inp -> case inp of
-                     []     -> []
-                     (x:xs) -> [(x,xs)])
+item =
+    P (\inp ->
+        case inp of
+            []     -> []
+            (x:xs) -> [(x,xs)])
 
 -- Sequencing parsers
 
@@ -161,5 +163,3 @@ nats = do symbol "["
                          natural)
           symbol "]"
           return (n:ns)
-
-

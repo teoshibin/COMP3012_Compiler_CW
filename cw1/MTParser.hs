@@ -3,34 +3,53 @@ module MTParser where
 import FunParser
 import Control.Applicative
 
-data AST = Program [Declaration] Command
-         deriving (Eq,Show)
+data AST 
+    = Program [Declaration] Command
+    deriving (Eq,Show)
 
-data Declaration = Var String Expr
-                 deriving (Eq,Show)
+data Declaration 
+    = Var String Expr
+    deriving (Eq,Show)
 
-data Command = CmdAssign String Expr
-             | CmdIf Expr Command Command
-             | CmdWhile Expr Command
-             | CmdGetInt String
-             | CmdPrintInt Expr
-             | CmdBegin [Command]
-             deriving (Eq,Show)
+data Command 
+    = CmdAssign String Expr
+    | CmdIf Expr Command Command
+    | CmdWhile Expr Command
+    | CmdGetInt String
+    | CmdPrintInt Expr
+    | CmdBegin [Command]
+    deriving (Eq,Show)
 
-data Expr = DeclaredVar String
-          | LitInteger Int
-          | BinOp BinOperator Expr Expr
-          | UnOp  UnOperator Expr
-          | TernaryIf Expr Expr Expr
-          deriving (Eq,Show)
+data Expr 
+    = DeclaredVar String
+    | LitInteger Int
+    | BinOp BinOperator Expr Expr
+    | UnOp  UnOperator Expr
+    | TernaryIf Expr Expr Expr
+    deriving (Eq,Show)
 
-data UnOperator = Negation | NegBool
-                deriving (Eq,Show)
+data UnOperator 
+    = Negation 
+    | NegBool
+    deriving (Eq,Show)
 
-data BinOperator = Addition | Subtraction | Multiplication | Division
-                 | Conjunction | Disjunction
-                 | LssOp | LeqOp | GtrOp | GeqOp | EqOp | NeqOp
-                 deriving (Eq,Show,Enum)
+data BinOperator
+    -- arithmetic operator
+    = Addition 
+    | Subtraction 
+    | Multiplication 
+    | Division
+    -- logical operator
+    | Conjunction 
+    | Disjunction
+    -- condition operator
+    | LssOp 
+    | LeqOp 
+    | GtrOp 
+    | GeqOp 
+    | EqOp 
+    | NeqOp
+    deriving (Eq,Show,Enum)
 
 {-
 NOTE ast definition from lecturer
@@ -103,30 +122,30 @@ let , in , var , if , then , else , while , do , getint , printint , begin , end
 
 -- parse entire program
 programParser :: Parser AST
-programParser = do symbol "let"
-                   ds <- declarationsParser
-                   symbol "in"
-                   c <- commandParser
-                   return (Program ds c)
+programParser = do  symbol "let"
+                    ds <- declarationsParser
+                    symbol "in"
+                    c <- commandParser
+                    return (Program ds c)
 
 -- parse one declaration
 declarationParser :: Parser Declaration
-declarationParser = do symbol "var"
-                       i <- varNameParser
-                       do symbol ":="
-                          e <- expr
-                          return (Var i e)
-                          <|>
-                          return (Var i (LitInteger 0)) -- init declaration without expression to 0
+declarationParser = do  symbol "var"
+                        i <- varNameParser
+                        do  symbol ":="
+                            e <- expr
+                            return (Var i e)
+                            <|>
+                            return (Var i (LitInteger 0)) -- init declaration without expression to 0
 
 -- parse multiple declarations
 declarationsParser :: Parser [Declaration]
 declarationsParser = do d <- declarationParser
-                        do symbol ";"
-                           ds <- declarationsParser
-                           return (d:ds)
-                           <|>
-                           return [d]
+                        do  symbol ";"
+                            ds <- declarationsParser
+                            return (d:ds)
+                            <|>
+                            return [d]
 
 -- parse all types of Command
 commandParser :: Parser Command
@@ -139,36 +158,36 @@ commandParser = do ifParser
 
 -- variable assignment
 assignParser :: Parser Command
-assignParser = do i <- varNameParser
-                  symbol ":="
-                  e <- expr
-                  return (CmdAssign i e)
+assignParser =  do  i <- varNameParser
+                    symbol ":="
+                    e <- expr
+                    return (CmdAssign i e)
 
 -- if condition parser
 ifParser :: Parser Command
-ifParser = do symbol "if"
-              e <- expr
-              symbol "then"
-              c0 <- commandParser
-              symbol "else"
-              c1 <- commandParser
-              return (CmdIf e c0 c1)
+ifParser =  do  symbol "if"
+                e <- expr
+                symbol "then"
+                c0 <- commandParser
+                symbol "else"
+                c1 <- commandParser
+                return (CmdIf e c0 c1)
 
 -- while loop parser
 whileParser :: Parser Command
-whileParser = do symbol "while"
-                 e <- expr
-                 symbol "do"
-                 c <- commandParser
-                 return (CmdWhile e c)
+whileParser =   do  symbol "while"
+                    e <- expr
+                    symbol "do"
+                    c <- commandParser
+                    return (CmdWhile e c)
 
 -- get var name for future assignment of IO value
 getIntParser :: Parser Command
-getIntParser = do symbol "getint"
-                  symbol "("
-                  i <- varNameParser
-                  symbol ")"
-                  return (CmdGetInt i)
+getIntParser =  do  symbol "getint"
+                    symbol "("
+                    i <- varNameParser
+                    symbol ")"
+                    return (CmdGetInt i)
 
 -- get expression for future IO output
 printIntParser :: Parser Command
@@ -180,53 +199,53 @@ printIntParser = do symbol "printint"
 
 -- multi lines command parser
 beginParser :: Parser Command
-beginParser = do symbol "begin"
-                 cs <- commandsParser
-                 symbol "end"
-                 return (CmdBegin cs)
+beginParser =   do  symbol "begin"
+                    cs <- commandsParser
+                    symbol "end"
+                    return (CmdBegin cs)
 
 commandsParser :: Parser [Command]
 commandsParser = do c <- commandParser
-                    do symbol ";"
-                       cs <- commandsParser
-                       return (c:cs)
-                       <|>
-                       return [c]
+                    do  symbol ";"
+                        cs <- commandsParser
+                        return (c:cs)
+                        <|>
+                        return [c]
 
 -- identifier with addons
 varNameParser :: Parser String
-varNameParser = do i <- identifier
-                   if isValidName i then return i else empty
+varNameParser = do  i <- identifier
+                    if isValidName i then return i else empty
 
 isValidName :: String -> Bool
 isValidName n 
-   | n `elem` keywordStrings = False
-   | otherwise = True
+    | n `elem` keywordStrings = False
+    | otherwise = True
 
 isDeclaredName :: String -> [String] -> Bool
 isDeclaredName s ls
-   | s `elem` ls = False
-   | otherwise = True
+    | s `elem` ls = False
+    | otherwise = True
 
 -- expression
 
 expr :: Parser Expr
-expr = do b <- bexp
-          do symbol "?"
-             e0 <- bexp
-             symbol ":"
-             e1 <- bexp
-             return (TernaryIf b e0 e1)
-             <|>
-             return b
+expr =  do  b <- bexp
+            do  symbol "?"
+                e0 <- bexp
+                symbol ":"
+                e1 <- bexp
+                return (TernaryIf b e0 e1)
+                <|>
+                return b
 
 bexp :: Parser Expr
-bexp = do e0 <- cexp
-          do symbol "||"
-             e1 <- bexp
-             return (BinOp Disjunction e0 e1)
-             <|>
-             return e0
+bexp =  do  e0 <- cexp
+            do  symbol "||"
+                e1 <- bexp
+                return (BinOp Disjunction e0 e1)
+                <|>
+                return e0
 
 cexp :: Parser Expr
 cexp = do e0 <- bterm
@@ -282,11 +301,11 @@ mexp :: Parser Expr
 mexp = mexp' id
 
 mexp' :: (Expr -> Expr) -> Parser Expr
-mexp' f = do e0 <- aterm
-             do op <- multdiv
-                mexp' (BinOp op (f e0))
-                <|>
-                return (f e0)
+mexp' f =   do  e0 <- aterm
+                do  op <- multdiv
+                    mexp' (BinOp op (f e0))
+                    <|>
+                    return (f e0)
 
 aterm :: Parser Expr
 aterm = (natural >>= return . LitInteger)
