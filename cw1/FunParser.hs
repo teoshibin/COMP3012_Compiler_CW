@@ -31,35 +31,35 @@ item =
 -- Sequencing parsers
 
 instance Functor Parser where
-  -- fmap :: (a -> b) -> Parser a -> Parser b
-  fmap g pa = P (\src -> [ (g x, src1) | (x,src1) <- parse pa src ])
+    -- fmap :: (a -> b) -> Parser a -> Parser b
+    fmap g pa = P (\src -> [ (g x, src1) | (x,src1) <- parse pa src ])
 
 instance Applicative Parser where
-  -- pure :: a -> Parser a
-  pure x = P (\src -> [(x,src)])
+    -- pure :: a -> Parser a
+    pure x = P (\src -> [(x,src)])
 
-  -- (<*>) :: Parser (a -> b) -> Parser a -> Parser b
-  pf <*> pa = P (\src -> [ (f x,src2) | (f,src1) <- parse pf src,
+    -- (<*>) :: Parser (a -> b) -> Parser a -> Parser b
+    pf <*> pa = P (\src -> [ (f x,src2) | (f,src1) <- parse pf src,
                                         (x,src2) <- parse pa src1 ] )
 
 instance Monad Parser where
-  -- return :: a -> Parser a
-  -- return = pure
+    -- return :: a -> Parser a
+    -- return = pure
 
-  -- (>>=) :: Parser a -> (a -> Parser b) -> Parser b
-  pa >>= fpb = P (\src -> [r | (x,src1) <- parse pa src,
+    -- (>>=) :: Parser a -> (a -> Parser b) -> Parser b
+    pa >>= fpb = P (\src -> [r | (x,src1) <- parse pa src,
                                r <- parse (fpb x) src1 ] )
 
 --Making choices
 
 instance Alternative Parser where
-  -- empty :: Parser a
-  empty = P (\rsc -> [])
+    -- empty :: Parser a
+    empty = P (\rsc -> [])
 
-  -- (<|>) :: Parser a -> Parser a -> Parser a
-  p1 <|> p2 = P (\src -> case parse p1 src of
-                    [] -> parse p2 src
-                    rs -> rs)
+    -- (<|>) :: Parser a -> Parser a -> Parser a
+    p1 <|> p2 = P (\src -> case parse p1 src of
+                        [] -> parse p2 src
+                        rs -> rs)
 
 -- Chosing among many alternatives
 choice :: Alternative f => [f a] -> f a
@@ -106,36 +106,36 @@ char x = sat (== x)
 
 string :: String -> Parser String
 string []     = return []
-string (x:xs) = do char x
-                   string xs
-                   return (x:xs)
+string (x:xs) = do  char x
+                    string xs
+                    return (x:xs)
 
 ident :: Parser String
-ident = do x  <- lower
-           xs <- many alphanum
-           return (x:xs)
+ident = do  x  <- lower
+            xs <- many alphanum
+            return (x:xs)
 
 nat :: (Num int, Read int) => Parser int
-nat = do xs <- some digit
-         return (read xs)
+nat =   do  xs <- some digit
+            return (read xs)
 
 int :: (Num int, Read int) => Parser int
-int = do char '-'
-         n <- nat
-         return (-n)
-      <|> nat
+int =   do  char '-'
+            n <- nat
+            return (-n)
+            <|> nat
 
 -- Handling spacing
 
 space :: Parser ()
-space = do many (sat isSpace)
-           return ()
+space = do  many (sat isSpace)
+            return ()
 
 token :: Parser a -> Parser a
-token p = do space
-             v <- p
-             space
-             return v
+token p =   do  space
+                v <- p
+                space
+                return v
 
 identifier :: Parser String
 identifier = token ident
@@ -150,16 +150,16 @@ symbol :: String -> Parser String
 symbol xs = token (string xs)
 
 parens :: Parser a -> Parser a
-parens p = do symbol "("
-              x <- p
-              symbol ")"
-              return x
+parens p =  do  symbol "("
+                x <- p
+                symbol ")"
+                return x
 
 -- Example: parsing a list of integers
 nats :: Parser [Integer]
-nats = do symbol "["
-          n <- natural
-          ns <- many (do symbol ","
-                         natural)
-          symbol "]"
-          return (n:ns)
+nats =  do  symbol "["
+            n <- natural
+            ns <- many (do symbol ","
+                           natural)
+            symbol "]"
+            return (n:ns)
