@@ -6,7 +6,7 @@ A compiler that extanded Arithmetic Expression to Mini Triangle Language using f
 Compilers COMP3012, University of Nottingham, 2021
 Venanzio Capretta / Nicolai Kraus
 
-## Contents:
+## Contents
 
 1. **FunParser.hs**
 
@@ -48,3 +48,5 @@ Venanzio Capretta / Nicolai Kraus
 
     This should generate a `.tam` file containing the TAM code for `.mt` file. If running `.tam` file it will execute the TAM code and print the final result.
 
+7. **Testing Folder**   
+    [Program Files and Compiled Program Files Details](testing)
