@@ -32,6 +32,24 @@ data BinOperator = Addition | Subtraction | Multiplication | Division
                  | LssOp | LeqOp | GtrOp | GeqOp | EqOp | NeqOp
                  deriving (Eq,Show,Enum)
 
+{-
+NOTE ast definition from lecturer
+
+type identifier = String
+
+data Com = Assignment Identifier Expr
+         | ifThenElse Expr Com Com
+         | WhileDo Expr Com
+         | GentInt Identifier
+         | PrintInt Expr
+         | BeginEnd Coms
+
+type Coms = [Com]
+
+data Coms = SingleC Com
+          | MultipleC Com Coms
+-}
+
 keywordStrings :: [String]
 keywordStrings =  [ "let"
                   , "in"
@@ -46,9 +64,6 @@ keywordStrings =  [ "let"
                   , "begin"
                   , "end"
                   ]
-
--- declaredVarNames :: [String]
--- declaredVarNames = []
 
 -- parse mini triangle
 mtParse :: String -> AST
@@ -82,7 +97,7 @@ let , in , var , if , then , else , while , do , getint , printint , begin , end
 
     aexp ::= mexp | mexp + aexp | mexp - aexp
     mexp ::= aterm | aterm * mexp | aterm / mexp
-    aterm ::= intLit | - aterm | ! aterm | ( exp ) | decVar
+    aterm ::= intLit | - aterm | ! aterm | ( exp ) | identifier
 
 -}
 
@@ -147,7 +162,6 @@ whileParser = do symbol "while"
                  c <- commandParser
                  return (CmdWhile e c)
 
--- TODO use parens instaed of "()"
 -- get var name for future assignment of IO value
 getIntParser :: Parser Command
 getIntParser = do symbol "getint"
@@ -189,6 +203,10 @@ isValidName n
    | n `elem` keywordStrings = False
    | otherwise = True
 
+isDeclaredName :: String -> [String] -> Bool
+isDeclaredName s ls
+   | s `elem` ls = False
+   | otherwise = True
 
 -- expression
 
@@ -281,12 +299,3 @@ aterm = (natural >>= return . LitInteger)
         <|> parens expr
         <|> (do i <- varNameParser
                 return (DeclaredVar i))
-
--- declaredNameParser :: Parser String
--- declaredNameParser = do i <- varNameParser
---                         if isDeclaredVar i then return i else empty
-
--- isDeclaredVar :: String -> Bool
--- isDeclaredVar n
---    | n `elem` declaredVarNames = True
---    | otherwise = False

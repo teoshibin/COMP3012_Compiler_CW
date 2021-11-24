@@ -14,7 +14,7 @@ module Main where
 
 -- import ExpParser
 import MTParser
-import ExpCompiler
+import MTCompiler
 import TAM
 
 import System.Environment

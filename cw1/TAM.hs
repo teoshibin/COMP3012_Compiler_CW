@@ -36,6 +36,15 @@ data TAMInst
   | LSS           -- order operation <
   | GTR           -- order operation >
   | EQL           -- equality operator
+  -- complex operations
+  | HALT
+  | GETINT
+  | PUTINT
+  | LABEL MTInt
+  | JUMP MTInt
+  | JUMPIFZ MTInt
+  | LOAD MTInt
+  | STORE MTInt
   deriving (Eq,Show)
 
 type Stack = [MTInt]

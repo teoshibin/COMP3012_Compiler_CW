@@ -10,11 +10,11 @@ Compiles simple Arith Expr into TAM programs.
 
 -}
 
-module ExpCompiler where
+module MTCompiler where
 
 import TAM
-import ExpParser
-import ExpTAM
+import MTParser
+import MTTAM
 
 -- Directly evaluate the input expression
 
@@ -23,11 +23,11 @@ eval = evaluate . expParse
 
 -- Evaluator for AST
 
-evaluate :: AST -> MTInt
+evaluate :: Expr -> MTInt
 evaluate (LitInteger x)   = x
 evaluate (BinOp op t1 t2) = binOpEv op (evaluate t1) (evaluate t2)
 evaluate (UnOp op t)      = unOpEv op (evaluate t)
-evaluate (Conditional b t1 t2) = if (evaluate b) /= 0
+evaluate (TernaryIf b t1 t2) = if (evaluate b) /= 0
                                  then (evaluate t1)
                                  else (evaluate t2)
 
@@ -56,7 +56,7 @@ unOpEv NegBool  = intNOT
 -- Compiling Arithmetic Expressions to TAM
 
 compArith :: String -> [TAMInst]
-compArith = expCode . expParse
+compArith = expCode . mtParse
 
 -- reading from a file
 
