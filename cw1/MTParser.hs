@@ -7,7 +7,7 @@ data AST
     = Program [Declaration] Command
     deriving (Eq,Show)
 
-data Declaration 
+data Declaration
     = Var String Expr
     deriving (Eq,Show)
 
@@ -180,7 +180,7 @@ whileParser =   do  symbol "while"
                     symbol "do"
                     c <- commandParser
                     return (CmdWhile e c)
-
+ 
 -- get var name for future assignment of IO value
 getIntParser :: Parser Command
 getIntParser =  do  symbol "getint"
@@ -307,6 +307,7 @@ mexp' f =   do  e0 <- aterm
                     <|>
                     return (f e0)
 
+-- TODO identify var name is declared
 aterm :: Parser Expr
 aterm = (natural >>= return . LitInteger)
         <|> (do symbol "-"

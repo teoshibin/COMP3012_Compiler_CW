@@ -33,7 +33,7 @@ data TAMInst
     -- flow control
     | JUMP LabelName    -- unconditional jump
     | JUMPIFZ LabelName -- pop stack and jump if the pop value is 0
-    | Label LabelName   -- label for jumping
+    | LABEL LabelName   -- label for jumping
     | HALT              -- stop execution     
     -- Arithmetic operations
     | ADD               -- adds two top values in the stack
@@ -69,7 +69,7 @@ tsPush n t = t {tsStack = n : tsStack t}
 tsPop :: TAMState -> (TAMInt, TAMState)
 tsPop t = (head s, t {tsStack = tail s})
     where s = tsStack t
--- TODO could use state transformer monad 
+-- TODO use state transformer monad 
 -- type TAMSt a = ST TAMState a
 -- tsPop1 :: TAMSt MTInst
 type TAMSt a = ST TAMState a

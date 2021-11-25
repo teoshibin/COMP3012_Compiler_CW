@@ -1,6 +1,6 @@
 let var n;
     var x;
-    var i;
+    var i
 in
 begin
   getint (n);

@@ -33,12 +33,13 @@ import Data.Char
 data FileType = TAM | MT
     deriving (Eq,Show)
 
-data Option = Trace | Run | Evaluate | Parse
+data Option = Trace | Run | Evaluate | Parse | Compile
     deriving (Eq,Show)
 
 main :: IO ()
 main = do
     args <- getArgs
+
     let inputName = head args
     let (fileName,extension) = fileNE args
         ops = options args
@@ -48,6 +49,7 @@ main = do
             then do stk <- traceTAM [] tam
                     putStrLn ("Final result: " ++ (show (head stk)))
             else putStrLn ("Executing TAM code: " ++ (show $ head $ execTAM [] tam))
+
     case extension of
         TAM -> do
             src <- readFile (fileName++".tam")
@@ -56,24 +58,35 @@ main = do
         -- EXP -> do
         --   src <- readFile (fileName++".exp")
         --   if Run `elem` ops
-        --     then tamFun (compArith src)
+        --     then tamFun (compMT src)
         --     else if Evaluate `elem` ops
         --       then putStrLn ("Evaluating Expression: " ++ show (evaluate (expParse src)))
-        --       else writeFile (fileName++".tam") (compileArithTAM src)
+        --       else writeFile (fileName++".tam") (compileMTTAM src)
         --            >> putStrLn ("compiled to TAM file: " ++ fileName ++ ".tam")
         MT -> do
             src <- readFile (fileName++".mt")
-            if Run `elem` ops
-            then tamFun (compArith src)
-            else if Evaluate `elem` ops
-                then
-                print "code for evaluate not done yet"
-                -- putStrLn ("Evaluating Expression: " ++ show (evaluate (mtParse src)))
-                else if Parse `elem` ops
-                then putStrLn ("\n== Parser ==\n\nMT: \n\n" ++ src)
-                    >> putStrLn ("\nAST: \n\n" ++ show (mtParse src))
-                else writeFile (fileName++".tam") (compileArithTAM src)
-                    >> putStrLn ("compiled to TAM file: " ++ fileName ++ ".tam")
+            let dealWithMT
+                    -- COMPILE & EXECUTE
+                    | Run `elem` ops = tamFun (compMT src)
+                    -- INTERPRET & EXECUTE
+                    | Evaluate `elem` ops = do
+                        print "code for evaluate not done yet"
+                        -- TODO call interpreter
+                        -- putStrLn ("Evaluating Expression: " ++ show (evaluate (mtParse src))) 
+                    -- PRINT MT PRINT AST
+                    | Parse `elem` ops = do
+                        putStrLn "\n== Parser =="
+                        putStrLn ("\nMT: \n\n" ++ src)
+                        putStrLn ("\nAST: \n\n" ++ show (mtParse src))
+                    -- COMPILE
+                    | Compile `elem` ops = do
+                        writeFile (fileName++".tam") (compileMTTAM src)
+                        putStrLn ("compiled to TAM file: " ++ fileName ++ ".tam")
+            dealWithMT
+
+{- 
+    IO 
+-}
 
 -- Finding the base name and extension of a file name
 
@@ -86,7 +99,6 @@ fileExt fn =
     in if ext == "" then ".mt" else ext
 
 extType :: String -> Maybe FileType
--- extType ".exp" = Just EXP
 extType ".mt" = Just MT
 extType ".tam" = Just TAM
 extType _ = Nothing
@@ -108,6 +120,7 @@ parseOption "--trace" = Just Trace
 parseOption "--run" = Just Run
 parseOption "--evaluate" = Just Evaluate
 parseOption "--parse" = Just Parse
+parseOption "--compile" = Just Compile
 parseOption _ = Nothing
 
 
