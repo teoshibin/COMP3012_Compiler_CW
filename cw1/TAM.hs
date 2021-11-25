@@ -25,7 +25,7 @@ type LabelName = String -- TAM Label
 -- Instructions of TAM language
 data TAMInst
     -- stack operations
-    = LOADL TAMInt       -- push value on to the Stack
+    = LOADL TAMInt      -- push value on to the Stack
     | LOAD Address      -- copy value from address on to the stack
     | STORE Address     -- pop stack and store to address
     | GETINT            -- read value from terminal push on to the stack
@@ -85,17 +85,17 @@ writing and reading to or from the stack
 CAVEAT: the address 0 or the oldest value is stored at the bottom of the stack
 -}
 
-execute :: TAMInst -> TAMSt ()
-execute HALT = return()
-execute (STORE a) = undefined 
-execute (PUTINT a) = undefined 
+-- execute :: TAMInst -> TAMSt ()
+-- execute HALT = return()
+-- execute (STORE a) = undefined 
+-- execute (PUTINT a) = undefined 
 
-newtype StateIO st a = StT (st -> IO (a,st))
+-- newtype StateIO st a = StT (st -> IO (a,st))
 -- NOTE can be more general
 -- newtype StateT st m a = StTm (st -> m (a,st))
 
-instance Functor (stateIO st) where
-    fmap = undefined
+-- instance Functor (stateIO st) where
+--     fmap = undefined
 
 
 
