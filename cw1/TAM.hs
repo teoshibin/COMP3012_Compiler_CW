@@ -19,21 +19,21 @@ import Data.List (intercalate)
 import StateC
 
 type TAMInt = Int       -- TAM Integer type
-type Address = Int      -- TAM Address
+type StackAddress = Int -- TAM StackAddress
 type LabelName = String -- TAM Label
 
 -- Instructions of TAM language
 data TAMInst
     -- stack operations
     = LOADL TAMInt      -- push value on to the Stack
-    | LOAD Address      -- copy value from address on to the stack
-    | STORE Address     -- pop stack and store to address
+    | LOAD StackAddress      -- copy value from StackAddress on to the stack
+    | STORE StackAddress     -- pop stack and store to StackAddress
     | GETINT            -- read value from terminal push on to the stack
     | PUTINT            -- pop stack and print pop value
     -- flow control
     | JUMP LabelName    -- unconditional jump
     | JUMPIFZ LabelName -- pop stack and jump if the pop value is 0
-    | LABEL LabelName   -- label for jumping
+    | Label LabelName   -- Label for jumping
     | HALT              -- stop execution     
     -- Arithmetic operations
     | ADD               -- adds two top values in the stack
@@ -82,7 +82,7 @@ tsSetCounter = undefined
 {-
 NOTE 
 writing and reading to or from the stack 
-CAVEAT: the address 0 or the oldest value is stored at the bottom of the stack
+CAVEAT: the StackAddress 0 or the oldest value is stored at the bottom of the stack
 -}
 
 -- execute :: TAMInst -> TAMSt ()

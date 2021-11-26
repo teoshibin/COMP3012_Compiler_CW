@@ -3,25 +3,28 @@ module MTParser where
 import FunParser
 import Control.Applicative
 
+type Identifier = String
+
 data AST 
     = Program [Declaration] Command
     deriving (Eq,Show)
 
 data Declaration
-    = Var String Expr
+    = EmptyVar Identifier
+    | Var Identifier Expr
     deriving (Eq,Show)
 
 data Command 
-    = CmdAssign String Expr
+    = CmdAssign Identifier Expr
     | CmdIf Expr Command Command
     | CmdWhile Expr Command
-    | CmdGetInt String
+    | CmdGetInt Identifier
     | CmdPrintInt Expr
     | CmdBegin [Command]
     deriving (Eq,Show)
 
 data Expr 
-    = DeclaredVar String
+    = DeclaredVar Identifier
     | LitInteger Int
     | BinOp BinOperator Expr Expr
     | UnOp  UnOperator Expr
@@ -88,7 +91,7 @@ keywordStrings =  [ "let"
 mtParse :: String -> AST
 mtParse src = case parse programParser src of
     [(t, "")] -> t
-    a -> error ("Parser Error:\n" ++ show a)
+    a -> error ("Parser Error: " ++ show a)
 
 {-
 NOTE 
@@ -136,7 +139,7 @@ declarationParser = do  symbol "var"
                             e <- expr
                             return (Var i e)
                             <|>
-                            return (Var i (LitInteger 0)) -- init declaration without expression to 0
+                            return (EmptyVar i) -- init declaration without expression to 0
 
 -- parse multiple declarations
 declarationsParser :: Parser [Declaration]
