@@ -1,3 +1,5 @@
+@echo off
+
 echo.
 echo Cleaning up...
 del testing\test0.tam

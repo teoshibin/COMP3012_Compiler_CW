@@ -18,37 +18,37 @@ module TAM where
 import Data.List (intercalate)
 import StateC
 
-type TAMInt = Int       -- TAM Integer type
-type StackAddress = Int -- TAM StackAddress
-type LabelName = String -- TAM Label
+type TAMInt = Int           -- TAM Integer type
+type StackAddress = Int     -- TAM StackAddress
+type LabelName = String     -- TAM Label
 
 -- Instructions of TAM language
 data TAMInst
     -- stack operations
-    = LOADL TAMInt      -- push value on to the Stack
-    | LOAD StackAddress      -- copy value from StackAddress on to the stack
-    | STORE StackAddress     -- pop stack and store to StackAddress
-    | GETINT            -- read value from terminal push on to the stack
-    | PUTINT            -- pop stack and print pop value
+    = LOADL TAMInt          -- push value on to the Stack
+    | LOAD StackAddress     -- copy value from StackAddress on to the stack
+    | STORE StackAddress    -- pop stack and store to StackAddress
+    | GETINT                -- read value from terminal push on to the stack
+    | PUTINT                -- pop stack and print pop value
     -- flow control
-    | JUMP LabelName    -- unconditional jump
-    | JUMPIFZ LabelName -- pop stack and jump if the pop value is 0
-    | Label LabelName   -- Label for jumping
-    | HALT              -- stop execution     
+    | JUMP LabelName        -- unconditional jump
+    | JUMPIFZ LabelName     -- pop stack and jump if the pop value is 0
+    | Label LabelName       -- Label for jumping
+    | HALT                  -- stop execution     
     -- Arithmetic operations
-    | ADD               -- adds two top values in the stack
-    | SUB               -- subtract second element of stack from top
-    | MUL               -- multiplies top values in the stack
-    | DIV               -- divides the second value by the top (integer division)
-    | NEG               -- negates the top of the stack
+    | ADD                   -- adds two top values in the stack
+    | SUB                   -- subtract second element of stack from top
+    | MUL                   -- multiplies top values in the stack
+    | DIV                   -- divides the second value by the top (integer division)
+    | NEG                   -- negates the top of the stack
     -- Boolean operations
-    | AND               -- Boolean conjunction (non-zero values are True)
-    | OR                -- Boolean disjunction
-    | NOT               -- Boolean negation
+    | AND                   -- Boolean conjunction (non-zero values are True)
+    | OR                    -- Boolean disjunction
+    | NOT                   -- Boolean negation
     -- Relational operations
-    | LSS               -- order operation <
-    | GTR               -- order operation >
-    | EQL               -- equality operator
+    | LSS                   -- order operation <
+    | GTR                   -- order operation >
+    | EQL                   -- equality operator
     deriving (Eq,Show)
 
 -- TAM execution state

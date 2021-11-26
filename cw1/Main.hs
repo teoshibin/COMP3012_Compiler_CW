@@ -40,7 +40,7 @@ main :: IO ()
 main = do
     args <- getArgs
 
-    let inputName = head args
+    -- let inputName = head args
     let (fileName,extension) = fileNE args
         ops = options args
     let tamFun :: [TAMInst] -> IO ()

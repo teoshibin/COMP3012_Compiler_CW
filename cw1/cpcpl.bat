@@ -1,1 +1,0 @@
-ghc Main -o mtc
