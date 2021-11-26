@@ -68,7 +68,7 @@ main = do
             let dealWithMT
                     -- COMPILE & EXECUTE
                     | Run `elem` ops = tamFun (compMT src)
-                    -- INTERPRET & EXECUTE
+                    -- INTERPRET (PARSE & EXECUTE)
                     | Evaluate `elem` ops = do
                         print "code for evaluate not done yet"
                         -- TODO call interpreter
@@ -84,9 +84,8 @@ main = do
                         case compileMTTAM src of
                             [] -> putStrLn "fail to compile"
                             tamCodes -> do
-                                -- putStrLn tamCodes
                                 writeFile (fileName++".tam") tamCodes
-                                putStrLn ("compiled to TAM file: " ++ fileName ++ ".tam") 
+                                putStrLn ("compiled to TAM file: " ++ fileName ++ ".tam")
             dealWithMT
 
 {- 

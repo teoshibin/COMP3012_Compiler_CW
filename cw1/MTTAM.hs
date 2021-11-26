@@ -24,10 +24,13 @@ import StateC
 
 type VarEnv = [(Identifier, StackAddress)]
 
-getAddress :: VarEnv -> Identifier -> StackAddress
-getAddress ve v = case lookup v ve of
-    Nothing -> error "Variable not declared"
-    Just a -> a
+nullAddress :: Int
+nullAddress = -1
+
+getAddress :: VarEnv -> Identifier -> Maybe StackAddress
+getAddress ve v = lookup v ve
+    -- Nothing -> Nothing
+    -- Just a -> Just a
 
 {- 
     CONVERT AST TO TAM 
@@ -90,17 +93,24 @@ commResult ve c =
 convertCommand :: VarEnv -> Command -> ST Int [TAMInst]
 
 -- ASSIGNMENT
-convertCommand ve (CmdAssign i (LitInteger n)) =
-    return (
-        [LOADL n] ++
-        [STORE (getAddress ve i)]
-        )
+convertCommand ve (CmdAssign i (LitInteger n)) = do
+    case getAddress ve i of
+        Nothing -> error ("Assignment to undeclared variable \"" ++ i ++ "\"")
+        Just a  -> 
+            return (
+                [LOADL n] ++
+                [STORE a]
+                )
 
-convertCommand ve (CmdAssign i e) =
-    return (
-        convertExpr ve e ++
-        [STORE (getAddress ve i)]
-    )
+
+convertCommand ve (CmdAssign i e) = do
+    case getAddress ve i of
+        Nothing -> error ("Assignment to undeclared variable \"" ++ i ++ "\"")
+        Just a  -> 
+            return (
+                convertExpr ve e ++
+                [STORE a]
+            )
 
 -- IF CONDITION
 convertCommand ve (CmdIf e c1 c2) = do
@@ -133,11 +143,14 @@ convertCommand ve (CmdWhile e c) = do
         )
 
 -- GETINT
-convertCommand ve (CmdGetInt i) =
-    return (
-        [GETINT] ++
-        [STORE (getAddress ve i)]
-        )
+convertCommand ve (CmdGetInt i) = do
+    case getAddress ve i of
+        Nothing -> error ("retrieving undeclared variable \"" ++ i ++ "\"")
+        Just a  -> 
+            return (
+                [GETINT] ++
+                [STORE a]
+                )
 
 
 -- PRINTINT
@@ -162,7 +175,10 @@ convertExpr :: VarEnv -> Expr -> [TAMInst]
 
 convertExpr ve (LitInteger x) = [LOADL x]
 
-convertExpr ve (DeclaredVar i) = [LOAD (getAddress ve i)]
+convertExpr ve (DeclaredVar i) =
+    case getAddress ve i of
+    Nothing -> error ("undeclared variable \"" ++ i ++ "\" in expression")
+    Just a  -> [LOAD a]
 
 -- Relational operators that don't have TAM instructions
 convertExpr ve (BinOp LeqOp t1 t2) =
