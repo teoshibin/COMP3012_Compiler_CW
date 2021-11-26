@@ -310,7 +310,6 @@ mexp' f =   do  e0 <- aterm
                     <|>
                     return (f e0)
 
--- TODO identify var name is declared
 aterm :: Parser Expr
 aterm = (natural >>= return . LitInteger)
         <|> (do symbol "-"
