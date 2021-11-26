@@ -80,8 +80,13 @@ main = do
                         putStrLn ("\nAST: \n\n" ++ show (mtParse src))
                     -- COMPILE
                     | Compile `elem` ops = do
-                        writeFile (fileName++".tam") (compileMTTAM src)
-                        putStrLn ("compiled to TAM file: " ++ fileName ++ ".tam")
+                        let tamCodes = compileMTTAM src
+                        case compileMTTAM src of
+                            [] -> putStrLn "fail to compile"
+                            tamCodes -> do
+                                -- putStrLn tamCodes
+                                writeFile (fileName++".tam") tamCodes
+                                putStrLn ("compiled to TAM file: " ++ fileName ++ ".tam") 
             dealWithMT
 
 {- 
@@ -135,4 +140,3 @@ options = unJust . (map parseOption)
 -- We assume one of the arguments is a file name
 fileNE :: [String] -> (String,FileType)
 fileNE = head . unJust . (map parseFileName)
-
