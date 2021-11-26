@@ -1,5 +1,5 @@
 @echo off
 
 call cpall.bat
-call testall.bat
+call cmpall.bat
 call clnall.bat

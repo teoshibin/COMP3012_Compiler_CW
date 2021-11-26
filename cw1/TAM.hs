@@ -18,11 +18,13 @@ module TAM where
 import Data.List (intercalate)
 import StateC
 
+
+{- 
+    TAM LANGUAGE DEFINITION
+-}
 type TAMInt = Int           -- TAM Integer type
 type StackAddress = Int     -- TAM StackAddress
 type LabelName = String     -- TAM Label
-
--- Instructions of TAM language
 data TAMInst
     -- stack operations
     = LOADL TAMInt          -- push value on to the Stack
@@ -51,34 +53,105 @@ data TAMInst
     | EQL                   -- equality operator
     deriving (Eq,Show)
 
--- TAM execution state
+
+{- 
+    TAM EXECUTION STATE DEFINITION
+-}
 type Stack = [TAMInt]
 type TAMProgram = [TAMInst]
 type Counter = Int
-
 data TAMState = TAMState {
     ts :: TAMProgram,
     tsCounter :: Counter,
     tsStack :: Stack
 } deriving(Eq, Show)
-
--- TAM state operation
-tsPush :: TAMInt -> TAMState -> TAMState
-tsPush n t = t {tsStack = n : tsStack t}
-
-tsPop :: TAMState -> (TAMInt, TAMState)
-tsPop t = (head s, t {tsStack = tail s})
-    where s = tsStack t
--- TODO use state transformer monad 
--- type TAMSt a = ST TAMState a
--- tsPop1 :: TAMSt MTInst
+-- TAMState as State Transformer State
 type TAMSt a = ST TAMState a
 
-lCounter :: LabelName -> TAMState -> Counter
+
+{- 
+    TODO main goal of TAM
+    execute :: TAMInst -> TAMState -> TAMState
+    tsPush :: MTInt -> TAMState -> TAMState
+    tsPop :: TAMState -> (MTInt, TAMState)
+    tsInst :: TAMState -> TAMInst
+ -}
+
+{- 
+    STATE AUXILIARY FUNCTION FOR Stack
+-}
+stkGetT :: TAMSt Stack
+-- retrieve state ts and return Stack from the state
+stkGetT = do
+    ts <- stGet
+    return (tsStack ts)
+
+stkUpdateT :: Stack -> TAMSt ()
+-- retrieve state ts and update the state with argument stack stk
+stkUpdateT stk = do
+    ts <- stGet
+    stUpdate (ts {tsStack = stk})
+
+{- 
+    TODO STATE AUXILIARY FUNCTION FOR TAMProgram
+-}
+instGetT :: TAMSt [TAMInst]
+instGetT = undefined 
+
+
+{- 
+    TODO STATE AUXILIARY FUNCTION FOR Counter
+-}
+ctrGetT :: TAMSt Counter
+ctrGetT = undefined 
+
+ctrUpdateT :: Counter -> TAMSt ()
+ctrUpdateT = undefined 
+
+
+{- 
+    STACK OPERATIONS
+-}
+popT :: TAMSt TAMInt
+-- retrieve stack stk from state update stack to state with tail stk return head of stk
+popT = do
+    stk <- stkGetT
+    stkUpdateT (tail stk)
+    return (head stk)
+
+pushT :: TAMInt -> TAMSt ()
+-- retrieve stack stk from state and add number n to head then update the stack to state
+pushT n = do
+    stk <- stkGetT
+    stkUpdateT (n:stk)
+
+{- 
+    COUNTER OPERATIONS
+-}
+continueT :: TAMSt ()
+continueT = undefined
+
+findLabelT :: LabelName -> TAMSt Counter
+findLabelT l = do
+    tam <- instGetT
+    return (lCounter l tam)
+
+{- 
+    TODO COUNTER HELPER FUNCTIONS
+-}
+lCounter :: LabelName -> TAMProgram -> Counter
+-- look for an element in TAMProgram that match the LabelName and return it's Counter
 lCounter = undefined 
 
-tsSetCounter :: Counter -> TAMState -> TAMState
-tsSetCounter = undefined 
+-- tsSetCounter :: Counter -> TAMState -> TAMState
+-- tsSetCounter = undefined 
+
+{- 
+    TODO EXECUTION OF TAM
+-}
+
+
+
 {-
 NOTE 
 writing and reading to or from the stack 
@@ -108,118 +181,119 @@ CAVEAT: the StackAddress 0 or the oldest value is stored at the bottom of the st
 
 
 
-emptyStack :: Stack
-emptyStack = []
-
--- Correspondence between Booleans and integers
-boolInt :: Bool -> TAMInt
-boolInt False = 0
-boolInt True = 1
-
--- All non-zero integers correspond to Boolean false
-intBool :: TAMInt -> Bool
-intBool x = x/=0
-
--- Convenient composition operators
-
--- Pre-composing with a 2-argument function
-infixr 9 .<
-(.<) :: (b -> c) -> (a -> a -> b) -> a -> a -> c
-g .< f = \ a1 a2 -> g (f a1 a2)
-
--- Post-composing with a 2-argument function
-infixr 9 <.
-(<.) :: (b -> b -> c) -> (a -> b) -> a -> a -> c
-g <. f = \ a1 a2 -> g (f a1) (f a2)
 
 
--- Implementation of boolean operations on Integers, always return 0 or 1
 
-intAND :: TAMInt -> TAMInt -> TAMInt
-intAND = boolInt .< (&&) <. intBool
 
-intOR :: TAMInt -> TAMInt -> TAMInt
-intOR = boolInt .< (||) <. intBool
+-- -- Correspondence between Booleans and integers
+-- boolInt :: Bool -> TAMInt
+-- boolInt False = 0
+-- boolInt True = 1
 
-intNOT :: TAMInt -> TAMInt
-intNOT = boolInt . not . intBool
+-- -- All non-zero integers correspond to Boolean false
+-- intBool :: TAMInt -> Bool
+-- intBool x = x/=0
 
--- Relational operations, return 0 (False) or 1 (True)
+-- -- Convenient composition operators
 
-intLSS :: TAMInt -> TAMInt -> TAMInt
-intLSS = boolInt .< (<)
+-- -- Pre-composing with a 2-argument function
+-- infixr 9 .<
+-- (.<) :: (b -> c) -> (a -> a -> b) -> a -> a -> c
+-- g .< f = \ a1 a2 -> g (f a1 a2)
 
-intGTR :: TAMInt -> TAMInt -> TAMInt
-intGTR = boolInt .< (>)
+-- -- Post-composing with a 2-argument function
+-- infixr 9 <.
+-- (<.) :: (b -> b -> c) -> (a -> b) -> a -> a -> c
+-- g <. f = \ a1 a2 -> g (f a1) (f a2)
 
-intEQL :: TAMInt -> TAMInt -> TAMInt
-intEQL = boolInt .< (==)
 
--- Effect of a single operation on the stack
-execute :: Stack -> TAMInst -> Stack
-execute stk (LOADL x) = x : stk
--- arithmetic operators
-execute (x:y:stk) ADD = y+x : stk
-execute (x:y:stk) SUB = y-x : stk
-execute (x:y:stk) MUL = y*x : stk
-execute (x:y:stk) DIV = y `div` x : stk
-execute (x:stk)   NEG = (-x) : stk
--- Boolean operators
-execute (x:y:stk) AND = y `intAND` x : stk
-execute (x:y:stk) OR = y `intOR` x : stk
-execute (x:stk)   NOT = intNOT x : stk
--- relational operators
-execute (x:y:stk) LSS = y `intLSS` x : stk
-execute (x:y:stk) GTR = y `intGTR` x : stk
-execute (x:y:stk) EQL = y `intEQL` x : stk
+-- -- Implementation of boolean operations on Integers, always return 0 or 1
 
--- Executing a TAM program (list of instructions)
-execTAM :: Stack -> [TAMInst] -> Stack
-execTAM = foldl execute
+-- intAND :: TAMInt -> TAMInt -> TAMInt
+-- intAND = boolInt .< (&&) <. intBool
 
--- Generate the trace of the TAM computation
---   list of pairs of instruction and stack after execution of the instruction
-execTrace :: Stack -> [TAMInst] -> [(TAMInst,Stack)]
-execTrace stk [] = []
-execTrace stk (i:is) =
-    let stk' = execute stk i
-        trace' = execTrace stk' is
-    in ((i,stk'):trace')
+-- intOR :: TAMInt -> TAMInt -> TAMInt
+-- intOR = boolInt .< (||) <. intBool
 
--- Printing pairs of value in a two-column table
-printTable :: [(String,String)] -> String
-printTable pairs = 
-    intercalate "\n" $ map (\(a,b) -> fitStr a ++ b) pairs
-        where   n = maximum (map (length.fst) pairs) + 5
-                fitStr a = a ++ replicate (n - length a) ' '
+-- intNOT :: TAMInt -> TAMInt
+-- intNOT = boolInt . not . intBool
 
--- print the trace of the computation, return the final stack
-traceTAM :: Stack -> [TAMInst] -> IO Stack
-traceTAM stk tam = do
-    let trace = execTrace stk tam
-        traceStr = ("Initial stack:", show stk) :
-                    map (\(a,b)->(show a,show b)) trace
-        finalStk = snd (last trace)
-    putStrLn (printTable traceStr)
-    return finalStk
+-- -- Relational operations, return 0 (False) or 1 (True)
+
+-- intLSS :: TAMInt -> TAMInt -> TAMInt
+-- intLSS = boolInt .< (<)
+
+-- intGTR :: TAMInt -> TAMInt -> TAMInt
+-- intGTR = boolInt .< (>)
+
+-- intEQL :: TAMInt -> TAMInt -> TAMInt
+-- intEQL = boolInt .< (==)
+
+-- -- Effect of a single operation on the stack
+-- execute :: Stack -> TAMInst -> Stack
+-- execute stk (LOADL x) = x : stk
+-- -- arithmetic operators
+-- execute (x:y:stk) ADD = y+x : stk
+-- execute (x:y:stk) SUB = y-x : stk
+-- execute (x:y:stk) MUL = y*x : stk
+-- execute (x:y:stk) DIV = y `div` x : stk
+-- execute (x:stk)   NEG = (-x) : stk
+-- -- Boolean operators
+-- execute (x:y:stk) AND = y `intAND` x : stk
+-- execute (x:y:stk) OR = y `intOR` x : stk
+-- execute (x:stk)   NOT = intNOT x : stk
+-- -- relational operators
+-- execute (x:y:stk) LSS = y `intLSS` x : stk
+-- execute (x:y:stk) GTR = y `intGTR` x : stk
+-- execute (x:y:stk) EQL = y `intEQL` x : stk
+
+-- -- Executing a TAM program (list of instructions)
+-- execTAM :: Stack -> [TAMInst] -> Stack
+-- execTAM = foldl execute
+
+-- -- Generate the trace of the TAM computation
+-- --   list of pairs of instruction and stack after execution of the instruction
+-- execTrace :: Stack -> [TAMInst] -> [(TAMInst,Stack)]
+-- execTrace stk [] = []
+-- execTrace stk (i:is) =
+--     let stk' = execute stk i
+--         trace' = execTrace stk' is
+--     in ((i,stk'):trace')
+
+-- -- Printing pairs of value in a two-column table
+-- printTable :: [(String,String)] -> String
+-- printTable pairs = 
+--     intercalate "\n" $ map (\(a,b) -> fitStr a ++ b) pairs
+--         where   n = maximum (map (length.fst) pairs) + 5
+--                 fitStr a = a ++ replicate (n - length a) ' '
+
+-- -- print the trace of the computation, return the final stack
+-- traceTAM :: Stack -> [TAMInst] -> IO Stack
+-- traceTAM stk tam = do
+--     let trace = execTrace stk tam
+--         traceStr = ("Initial stack:", show stk) :
+--                     map (\(a,b)->(show a,show b)) trace
+--         finalStk = snd (last trace)
+--     putStrLn (printTable traceStr)
+--     return finalStk
 
 -- writing out a TAM program
 writeTAM :: [TAMInst] -> String
 writeTAM = foldl (\s inst -> s ++ show inst ++ "\n") ""
 
--- parsing a TAM program
-parseTAM :: String -> [TAMInst]
-parseTAM = pTAM . words where
-    pTAM ("LOADL":x:src) = LOADL (read x) : pTAM src
-    pTAM ("ADD":src) = ADD : pTAM src
-    pTAM ("SUB":src) = SUB : pTAM src
-    pTAM ("MUL":src) = MUL : pTAM src
-    pTAM ("DIV":src) = DIV : pTAM src
-    pTAM ("NEG":src) = NEG : pTAM src
-    pTAM ("AND":src) = AND : pTAM src
-    pTAM ("OR" :src) = OR  : pTAM src
-    pTAM ("NOT":src) = NOT : pTAM src
-    pTAM ("LSS":src) = LSS : pTAM src
-    pTAM ("GTR":src) = GTR : pTAM src
-    pTAM ("EQL":src) = EQL : pTAM src
-    pTAM _ = []
+-- -- parsing a TAM program
+-- parseTAM :: String -> [TAMInst]
+-- parseTAM = pTAM . words where
+--     pTAM ("LOADL":x:src) = LOADL (read x) : pTAM src
+--     pTAM ("ADD":src) = ADD : pTAM src
+--     pTAM ("SUB":src) = SUB : pTAM src
+--     pTAM ("MUL":src) = MUL : pTAM src
+--     pTAM ("DIV":src) = DIV : pTAM src
+--     pTAM ("NEG":src) = NEG : pTAM src
+--     pTAM ("AND":src) = AND : pTAM src
+--     pTAM ("OR" :src) = OR  : pTAM src
+--     pTAM ("NOT":src) = NOT : pTAM src
+--     pTAM ("LSS":src) = LSS : pTAM src
+--     pTAM ("GTR":src) = GTR : pTAM src
+--     pTAM ("EQL":src) = EQL : pTAM src
+--     pTAM _ = []
