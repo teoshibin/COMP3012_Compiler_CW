@@ -24,9 +24,6 @@ import StateC
 
 type VarEnv = [(Identifier, StackAddress)]
 
-nullAddress :: Int
-nullAddress = -1
-
 getAddress :: VarEnv -> Identifier -> Maybe StackAddress
 getAddress ve v = lookup v ve
     -- Nothing -> Nothing

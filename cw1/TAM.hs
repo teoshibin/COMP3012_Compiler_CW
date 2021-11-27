@@ -18,10 +18,12 @@ module TAM where
 import Data.List (intercalate)
 import StateC
 
+-- ----------------------------- Data Structure ----------------------------- --
 
 {- 
     TAM LANGUAGE DEFINITION
 -}
+
 type TAMInt = Int           -- TAM Integer type
 type StackAddress = Int     -- TAM StackAddress
 type LabelName = String     -- TAM Label
@@ -57,11 +59,12 @@ data TAMInst
 {- 
     TAM EXECUTION STATE DEFINITION
 -}
+
 type Stack = [TAMInt]
 type TAMProgram = [TAMInst]
 type Counter = Int
 data TAMState = TAMState {
-    tsCode :: TAMProgram,
+    tsProgram :: TAMProgram,
     tsCounter :: Counter,
     tsStack :: Stack
 } deriving(Eq, Show)
@@ -69,23 +72,30 @@ data TAMState = TAMState {
 type TAMSt a = StateIO TAMState a
 
 
+-- ------------------------ STATE AUXILIARY FUNCTIONS ----------------------- --
+
 {- 
-    TODO main goal of TAM
-    execute :: TAMInst -> TAMState -> TAMState
-    tsPush :: MTInt -> TAMState -> TAMState
-    tsPop :: TAMState -> (MTInt, TAMState)
-    tsInst :: TAMState -> TAMInst
- -}
+    STATE AUXILIARY FUNCTIONS FOR TAMProgram
+-}
+
+-- get program from state
+progGetT :: TAMSt [TAMInst]
+progGetT = do
+    ts <- stGetIO
+    return (tsProgram ts)
 
 
 {- 
     STATE AUXILIARY FUNCTIONS FOR Stack
 -}
+
+-- get stack from state
 stkGetT :: TAMSt Stack
 stkGetT = do
     ts <- stGetIO
     return (tsStack ts)
 
+-- replace stack within the state with input stack
 stkUpdateT :: Stack -> TAMSt ()
 stkUpdateT stk = do
     ts <- stGetIO
@@ -93,37 +103,52 @@ stkUpdateT stk = do
 
 
 {- 
-    STATE AUXILIARY FUNCTIONS FOR TAMProgram
--}
-codeGetT :: TAMSt [TAMInst]
-codeGetT = do
-    ts <- stGetIO 
-    return (tsCode ts) 
-
-
-{- 
     STATE AUXILIARY FUNCTIONS FOR Counter
 -}
+
+-- get counter from state
 ctrGetT :: TAMSt Counter
 ctrGetT = do
-    ts <- stGetIO 
-    return (tsCounter ts) 
+    ts <- stGetIO
+    return (tsCounter ts)
 
+-- replace counter within state with input counter
 ctrUpdateT :: Counter -> TAMSt ()
 ctrUpdateT c = do
     ts <- stGetIO
-    stUpdateIO (ts {tsCounter = c}) 
+    stUpdateIO (ts {tsCounter = c})
+
+
+-- ------------------------------- Operations ------------------------------- --
+
+{- 
+    PROGRAM OPERATIONS
+-}
+
+-- initialize a empty stateIO contianing the program
+initTS :: TAMProgram -> TAMState
+initTS tam = TAMState {tsProgram = tam, tsCounter = 0, tsStack = []}
+
+-- get the counter pointing instruction
+pointedInstT :: TAMSt TAMInst
+pointedInstT = do
+    prog <- progGetT
+    ctr <- ctrGetT
+    return (prog !! ctr)
 
 
 {- 
     STACK OPERATIONS
 -}
+
+-- pop stack and return a value
 popT :: TAMSt TAMInt
 popT = do
     stk <- stkGetT
     stkUpdateT (tail stk)
     return (head stk)
 
+-- push an input value to stack
 pushT :: TAMInt -> TAMSt ()
 pushT n = do
     stk <- stkGetT
@@ -131,26 +156,40 @@ pushT n = do
 
 
 {- 
-    TODO COUNTER OPERATIONS
+    COUNTER OPERATIONS
 -}
-continueT :: TAMSt ()
-continueT = undefined
 
+-- increament the counter by 1
+stepCounterT :: TAMSt ()
+stepCounterT = do
+    ctr <- ctrGetT
+    ctrUpdateT (ctr + 1)
+
+-- find input label within the program and return its counter position
 findLabelT :: LabelName -> TAMSt Counter
 findLabelT l = do
-    tam <- codeGetT
-    return (lCounter l tam)
+    prog <- progGetT
+    return (lCounter l prog)
 
 
 {- 
-    TODO COUNTER HELPER FUNCTIONS
+    COUNTER HELPER FUNCTIONS
 -}
-lCounter :: LabelName -> TAMProgram -> Counter
--- look for an element in TAMProgram that match the LabelName and return it's Counter
-lCounter = undefined 
 
--- tsSetCounter :: Counter -> TAMState -> TAMState
--- tsSetCounter = undefined 
+-- TODO look for an element in TAMProgram that match the LabelName and return it's Counter
+lCounter :: LabelName -> TAMProgram -> Counter
+lCounter l prog = 
+    case findLabelIndex l prog 0 of
+        Just c -> c
+        Nothing -> error ("Label \"" ++ l ++ "\" not found")
+
+findLabelIndex :: LabelName -> TAMProgram -> Counter -> Maybe Counter
+findLabelIndex l ((Label l'):ps) c
+  | l == l' = Just c
+  | null ps = Nothing
+  | otherwise = findLabelIndex l ps (c+1)
+findLabelIndex l ps c = findLabelIndex l ps (c+1)
+
 
 
 {- 
@@ -158,15 +197,39 @@ lCounter = undefined
     NOTE writing and reading to or from the stack 
          CAVEAT: the StackAddress 0 or the oldest value is stored at the bottom of the stack
 -}
-execute :: TAMInst -> TAMSt ()
-execute HALT = return ()
-execute (LOADL n) = do
+
+-- execute one line of TAM code
+executeOne :: TAMInst -> TAMSt ()
+executeOne HALT = return ()
+executeOne (LOADL n) = do
     pushT n
-    continueT
-execute (JUMP l) = do
+    stepCounterT
+executeOne (JUMP l) = do
     c <- findLabelT l
     ctrUpdateT c
-execute GETINT = undefined -- NOTE this require IO action
+executeOne GETINT = do
+    liftIO (putStrLn "input : ")
+    s <- liftIO getLine
+    pushT (read s)
+    stepCounterT
+executeOne PUTINT = do
+    x <- popT
+    liftIO (putStrLn ("output > " ++ show x))
+    stepCounterT
+
+executeMany :: TAMSt Stack
+executeMany = do
+    inst <- pointedInstT
+    executeOne inst
+    if inst == HALT
+        then stkGetT
+        else executeMany
+
+
+exectTAM :: [TAMInst] -> IO Stack
+exectTAM tam = do
+    (stk,_) <- appIO executeMany (initTS tam)
+    return stk
 
 -- execute :: TAMInst -> TAMSt ()
 -- execute HALT = return()
