@@ -61,12 +61,12 @@ type Stack = [TAMInt]
 type TAMProgram = [TAMInst]
 type Counter = Int
 data TAMState = TAMState {
-    ts :: TAMProgram,
+    tsCode :: TAMProgram,
     tsCounter :: Counter,
     tsStack :: Stack
 } deriving(Eq, Show)
 -- TAMState as State Transformer State
-type TAMSt a = ST TAMState a
+type TAMSt a = StateIO TAMState a
 
 
 {- 
@@ -77,53 +77,58 @@ type TAMSt a = ST TAMState a
     tsInst :: TAMState -> TAMInst
  -}
 
+
 {- 
-    STATE AUXILIARY FUNCTION FOR Stack
+    STATE AUXILIARY FUNCTIONS FOR Stack
 -}
 stkGetT :: TAMSt Stack
--- retrieve state ts and return Stack from the state
 stkGetT = do
-    ts <- stGet
+    ts <- stGetIO
     return (tsStack ts)
 
 stkUpdateT :: Stack -> TAMSt ()
--- retrieve state ts and update the state with argument stack stk
 stkUpdateT stk = do
-    ts <- stGet
-    stUpdate (ts {tsStack = stk})
+    ts <- stGetIO
+    stUpdateIO (ts {tsStack = stk})
+
 
 {- 
-    TODO STATE AUXILIARY FUNCTION FOR TAMProgram
+    STATE AUXILIARY FUNCTIONS FOR TAMProgram
 -}
-instGetT :: TAMSt [TAMInst]
-instGetT = undefined 
+codeGetT :: TAMSt [TAMInst]
+codeGetT = do
+    ts <- stGetIO 
+    return (tsCode ts) 
 
 
 {- 
-    TODO STATE AUXILIARY FUNCTION FOR Counter
+    STATE AUXILIARY FUNCTIONS FOR Counter
 -}
 ctrGetT :: TAMSt Counter
-ctrGetT = undefined 
+ctrGetT = do
+    ts <- stGetIO 
+    return (tsCounter ts) 
 
 ctrUpdateT :: Counter -> TAMSt ()
-ctrUpdateT = undefined 
+ctrUpdateT c = do
+    ts <- stGetIO
+    stUpdateIO (ts {tsCounter = c}) 
 
 
 {- 
     STACK OPERATIONS
 -}
 popT :: TAMSt TAMInt
--- retrieve stack stk from state update stack to state with tail stk return head of stk
 popT = do
     stk <- stkGetT
     stkUpdateT (tail stk)
     return (head stk)
 
 pushT :: TAMInt -> TAMSt ()
--- retrieve stack stk from state and add number n to head then update the stack to state
 pushT n = do
     stk <- stkGetT
     stkUpdateT (n:stk)
+
 
 {- 
     TODO COUNTER OPERATIONS
@@ -133,8 +138,9 @@ continueT = undefined
 
 findLabelT :: LabelName -> TAMSt Counter
 findLabelT l = do
-    tam <- instGetT
+    tam <- codeGetT
     return (lCounter l tam)
+
 
 {- 
     TODO COUNTER HELPER FUNCTIONS
@@ -146,8 +152,11 @@ lCounter = undefined
 -- tsSetCounter :: Counter -> TAMState -> TAMState
 -- tsSetCounter = undefined 
 
+
 {- 
     TODO EXECUTION OF TAM
+    NOTE writing and reading to or from the stack 
+         CAVEAT: the StackAddress 0 or the oldest value is stored at the bottom of the stack
 -}
 execute :: TAMInst -> TAMSt ()
 execute HALT = return ()
@@ -159,39 +168,18 @@ execute (JUMP l) = do
     ctrUpdateT c
 execute GETINT = undefined -- NOTE this require IO action
 
-
-{-
-NOTE 
-writing and reading to or from the stack 
-CAVEAT: the StackAddress 0 or the oldest value is stored at the bottom of the stack
--}
-
 -- execute :: TAMInst -> TAMSt ()
 -- execute HALT = return()
 -- execute (STORE a) = undefined 
 -- execute (PUTINT a) = undefined 
 
--- newtype StateIO st a = StT (st -> IO (a,st))
--- NOTE can be more general
--- newtype StateT st m a = StTm (st -> m (a,st))
-
--- instance Functor (stateIO st) where
---     fmap = undefined
-
-
-
 -- execute :: TAMInst -> TAMState -> TAMState
 -- exeStep :: TAMState -> TAMState
 
 
-
-
-
-
-
-
-
-
+{- 
+    TODO EXECUTION FOR EXPRESSION
+-}
 
 -- -- Correspondence between Booleans and integers
 -- boolInt :: Bool -> TAMInt

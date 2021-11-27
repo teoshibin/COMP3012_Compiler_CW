@@ -7,7 +7,7 @@ module StateC where
 
 
 {- 
-    STATE TRANSFORMER
+    STATE
 -}
 
 newtype ST st a = S (st -> (a,st))
@@ -51,7 +51,7 @@ stRevise f = stGet >>= stUpdate . f
 
 
 {- 
-    TODO STATE IO
+    STATE IO
 -}
 
 newtype StateIO st a = SIO (st -> IO (a,st))
@@ -108,7 +108,7 @@ stReviseIO f = stGetIO >>= stUpdateIO . f
 
 
 {- 
-    TODO STATET (generic STATE m)
+    TODO STATE T
 -}
 -- -- More general definition: If m is a monad, define
 -- newtype StateT st m a = StTm (st -> m (a ,st))
