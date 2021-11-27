@@ -154,6 +154,26 @@ pushT n = do
     stk <- stkGetT
     stkUpdateT (n:stk)
 
+-- EXTRA STACK OPERATIONS
+
+-- indexing for stack
+stkAddressRead :: StackAddress -> TAMSt TAMInt
+stkAddressRead a = do
+    stk <- stkGetT
+    let n = reverse stk !! a
+    return n
+
+-- replace value at given index
+stkAddressWrite :: StackAddress -> TAMInt -> TAMSt ()
+stkAddressWrite a n = do
+    stk <- stkGetT
+    let revStk = reverse stk
+        revStk' = replaceAtIndex a n revStk
+        stk' = reverse revStk'
+    stkUpdateT stk'
+
+replaceAtIndex :: Int -> a -> [a] -> [a]    
+replaceAtIndex i x xs = take i xs ++ [x] ++ drop (i+1) xs
 
 {- 
     COUNTER OPERATIONS
@@ -196,8 +216,14 @@ executeOne :: TAMInst -> TAMSt ()
 executeOne (LOADL n) = do
     pushT n
     stepCounterT
-executeOne (LOAD a) = undefined -- TODO copy value under stack on to stack
-executeOne (STORE a) = undefined -- TODO pop value and store it under the stack
+executeOne (LOAD a) = do
+    n <- stkAddressRead a
+    pushT n
+    stepCounterT
+executeOne (STORE a) = do
+    n <- popT
+    stkAddressWrite a n
+    stepCounterT
 executeOne GETINT = do
     liftIO (putStrLn "input : ")
     s <- liftIO getLine
@@ -235,19 +261,7 @@ executeOne LSS = cal2value intLSS
 executeOne GTR = cal2value intGTR
 executeOne EQL = cal2value intEQL
 
-cal1value :: (TAMInt -> TAMInt) -> TAMSt ()
-cal1value f = do
-    x <- popT
-    pushT (f x)
-    stepCounterT
-
-cal2value :: (TAMInt -> TAMInt -> TAMInt) -> TAMSt ()
-cal2value f = do
-    b <- popT
-    a <- popT
-    pushT (f a b)
-    stepCounterT
-
+-- execute many lines of TAM
 executeMany :: TAMSt Stack
 executeMany = do
     inst <- pointedInstT
@@ -256,10 +270,28 @@ executeMany = do
         then stkGetT
         else executeMany
 
-exectTAM :: [TAMInst] -> IO Stack
-exectTAM tam = do
+-- execute many lines of TAM and return only the stack
+executeTAM :: [TAMInst] -> IO Stack
+executeTAM tam = do
     (stk,_) <- appIO executeMany (initTS tam)
     return stk
+
+-- EXECUTION OF TAM HELPER FUNCTIONS
+
+-- apply f to 2 pop values then push it
+cal1value :: (TAMInt -> TAMInt) -> TAMSt ()
+cal1value f = do
+    x <- popT
+    pushT (f x)
+    stepCounterT
+
+-- apply f to 1 pop values then push it
+cal2value :: (TAMInt -> TAMInt -> TAMInt) -> TAMSt ()
+cal2value f = do
+    b <- popT
+    a <- popT
+    pushT (f a b)
+    stepCounterT
 
 -- Correspondence between Booleans and integers
 boolInt :: Bool -> TAMInt
@@ -270,7 +302,7 @@ boolInt True = 1
 intBool :: TAMInt -> Bool
 intBool x = x/=0
 
--- Convenient composition operators
+-- Composition operators
 
 -- Pre-composing with a 2-argument function
 infixr 9 .<
@@ -304,6 +336,8 @@ intGTR = boolInt .< (>)
 intEQL :: TAMInt -> TAMInt -> TAMInt
 intEQL = boolInt .< (==)
 
+
+-- TODO parse TAM
 
 -- -- Executing a TAM program (list of instructions)
 -- execTAM :: Stack -> [TAMInst] -> Stack

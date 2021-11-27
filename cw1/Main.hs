@@ -43,18 +43,19 @@ main = do
     -- let inputName = head args
     let (fileName,extension) = fileNE args
         ops = options args
-    let tamFun :: [TAMInst] -> IO ()
-        tamFun = \tam ->
-            if Trace `elem` ops
-            then do stk <- traceTAM [] tam
-                    putStrLn ("Final result: " ++ (show (head stk)))
-            else putStrLn ("Executing TAM code: " ++ (show $ head $ execTAM [] tam))
+    -- let tamFun :: [TAMInst] -> IO ()
+    --     tamFun = \tam ->
+    --         if Trace `elem` ops
+    --         then do stk <- traceTAM [] tam
+    --                 putStrLn ("Final result: " ++ (show (head stk)))
+    --         else putStrLn ("Executing TAM code: " ++ (show $ head $ execTAM [] tam))
 
     case extension of
-        TAM -> do
-            src <- readFile (fileName++".tam")
-            let tam = parseTAM src
-            tamFun tam
+        -- TAM -> do
+        --     src <- readFile (fileName++".tam")
+        --     let tam = parseTAM src
+        --     tamFun tam
+
         -- EXP -> do
         --   src <- readFile (fileName++".exp")
         --   if Run `elem` ops
@@ -67,7 +68,7 @@ main = do
             src <- readFile (fileName++".mt")
             let dealWithMT
                     -- COMPILE & EXECUTE
-                    | Run `elem` ops = tamFun (compMT src)
+                    -- | Run `elem` ops = tamFun (compMT src)
                     -- INTERPRET (PARSE & EXECUTE)
                     | Evaluate `elem` ops = do
                         print "code for evaluate not done yet"
