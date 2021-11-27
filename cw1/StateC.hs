@@ -1,10 +1,25 @@
-{- Compilers COMP3012
-   15 Nov 2021
-   Nicolai Kraus
+{-
+
+Compilers Course (COMP3012), 2021
+    Venanzio Capretta
+    Nicolai Kraus
+
+Additional Code written by
+    Shi Bin Teo
+
+-}
+
+{- 
+    State Functor Applicative & Monad
+
+    for abstraction of returning multiple things at once
 -}
 
 module StateC where
 
+
+
+-- ---------------------------- STATE TRANSFORMER --------------------------- --
 
 {- 
     STATE
@@ -40,14 +55,18 @@ instance Monad (ST st) where
             (y,s2) = app (f x) s1
         in (y,s2))
 
+-- update state
 stUpdate :: st -> ST st ()
 stUpdate s = S(\_ -> ((),s))
 
+-- get state
 stGet :: ST st st
 stGet = S(\s -> (s,s))
 
+-- apply f to state
 stRevise :: (st -> st) -> ST st ()
 stRevise f = stGet >>= stUpdate . f
+
 
 
 {- 
@@ -108,11 +127,11 @@ stReviseIO f = stGetIO >>= stUpdateIO . f
 
 
 {- 
-    TODO STATE T
+    STATE T
 -}
+
 -- -- More general definition: If m is a monad, define
 -- newtype StateT st m a = StTm (st -> m (a ,st))
 
 -- instance Functor (StateT st m) where
 --   fmap = undefined
--- -- and so on

@@ -1,7 +1,57 @@
+{-
+
+Compilers Course (COMP3012), 2021
+    Venanzio Capretta
+    Nicolai Kraus
+
+Additional Code written by
+    Shi Bin Teo
+
+-}
+
+{-
+    MiniTriagle Strings into AST
+    
+    Parser for MiniTriangle language
+-}
+
 module MTParser where
 
 import FunParser
 import Control.Applicative
+
+
+
+-- ----------------------------- Data Structure ----------------------------- --
+
+{- 
+    MiniTriangle Abstract Syntax Tree Definition
+
+    keywords are reserved and are not valid identifiers / varaible names. 
+    let , in , var , if , then , else , while , do , getint , printint , begin , end
+
+    program     ::= 'let' declarations 'in' command
+    declaration ::= 'var' identifier | 'var' identifier ':=' expr
+    declarations::= declaration | declaration ';' declarations
+    command     ::= identifier ':=' expr
+                | 'if' expr 'then' command 'else' command
+                | 'while' expr 'do' command
+                | 'getint' '(' identifier ')'
+                | 'printint' '(' expr ')'
+                | 'begin' commands 'end'
+    commands ::= command | command ';' commands
+
+    expr ::= bexp | bexp ? bexp : bexp
+
+    bexp ::= cexp | cexp || bexp
+    cexp ::= bterm | bterm && cexp
+    bterm ::= aexp | aexp `op` aexp
+                where `op` is one of <,<=,>,>=,==,!=
+
+    aexp ::= mexp | mexp + aexp | mexp - aexp
+    mexp ::= aterm | aterm * mexp | aterm / mexp
+    aterm ::= intLit | - aterm | ! aterm | ( exp ) | identifier
+-}
 
 type Identifier = String
 
@@ -54,74 +104,40 @@ data BinOperator
     | NeqOp
     deriving (Eq,Show,Enum)
 
-{-
-NOTE ast definition from lecturer
 
-type identifier = String
 
-data Com = Assignment Identifier Expr
-         | ifThenElse Expr Com Com
-         | WhileDo Expr Com
-         | GentInt Identifier
-         | PrintInt Expr
-         | BeginEnd Coms
+-- -------------------------------- CONSTANT -------------------------------- --
 
-type Coms = [Com]
-
-data Coms = SingleC Com
-          | MultipleC Com Coms
--}
-
+-- reserved keywords
 keywordStrings :: [String]
-keywordStrings =  [ "let"
-                  , "in"
-                  , "var"
-                  , "if"
-                  , "then"
-                  , "else"
-                  , "while"
-                  , "do"
-                  , "getint"
-                  , "printint"
-                  , "begin"
-                  , "end"
-                  ]
+keywordStrings =  
+    [ "let"
+    , "in"
+    , "var"
+    , "if"
+    , "then"
+    , "else"
+    , "while"
+    , "do"
+    , "getint"
+    , "printint"
+    , "begin"
+    , "end"
+    ]
+
+
+
+-- --------------------------------- Parser --------------------------------- --
+
+{- 
+    MAIN PARSER
+-}
 
 -- parse mini triangle
 mtParse :: String -> AST
 mtParse src = case parse programParser src of
     [(t, "")] -> t
     a -> error ("Parser Error: " ++ show a)
-
-{-
-NOTE 
-
-keywords are reserved and are not valid identifiers / varaible names. 
-let , in , var , if , then , else , while , do , getint , printint , begin , end
-
-    program     ::= 'let' declarations 'in' command
-    declaration ::= 'var' identifier | 'var' identifier ':=' expr
-    declarations::= declaration | declaration ';' declarations
-    command     ::= identifier ':=' expr
-                | 'if' expr 'then' command 'else' command
-                | 'while' expr 'do' command
-                | 'getint' '(' identifier ')'
-                | 'printint' '(' expr ')'
-                | 'begin' commands 'end'
-    commands ::= command | command ';' commands
-
-    expr ::= bexp | bexp ? bexp : bexp
-
-    bexp ::= cexp | cexp || bexp
-    cexp ::= bterm | bterm && cexp
-    bterm ::= aexp | aexp `op` aexp
-                where `op` is one of <,<=,>,>=,==,!=
-
-    aexp ::= mexp | mexp + aexp | mexp - aexp
-    mexp ::= aterm | aterm * mexp | aterm / mexp
-    aterm ::= intLit | - aterm | ! aterm | ( exp ) | identifier
-
--}
 
 -- parse entire program
 programParser :: Parser AST
@@ -130,6 +146,12 @@ programParser = do  symbol "let"
                     symbol "in"
                     c <- commandParser
                     return (Program ds c)
+
+
+
+{- 
+    DECLARATION PARSER
+-}
 
 -- parse one declaration
 declarationParser :: Parser Declaration
@@ -149,6 +171,12 @@ declarationsParser = do d <- declarationParser
                             return (d:ds)
                             <|>
                             return [d]
+
+
+
+{- 
+    COMMAND PARSER
+-}
 
 -- parse all types of Command
 commandParser :: Parser Command
@@ -225,12 +253,11 @@ isValidName n
     | n `elem` keywordStrings = False
     | otherwise = True
 
-isDeclaredName :: String -> [String] -> Bool
-isDeclaredName s ls
-    | s `elem` ls = False
-    | otherwise = True
 
--- expression
+
+{- 
+    EXPRESSION PARSER
+-}
 
 expr :: Parser Expr
 expr =  do  b <- bexp

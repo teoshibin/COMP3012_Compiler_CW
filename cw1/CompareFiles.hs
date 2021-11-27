@@ -1,30 +1,41 @@
+{-
+
+written by
+    Shi Bin Teo
+
+-}
+
+{- 
+    Compare Compiled TAM with Answer TAM
+-}
+
 import System.Directory.Internal.Prelude (getArgs)
 import Data.Char
 
 data FileType = TAM
     deriving (Eq,Show)
 
-{- compare content of two files -}
+-- compare content of two files
 cmpFiles :: FilePath -> FilePath -> IO Bool
 cmpFiles a b = do
     aContents <- readFile a
     bContents <- readFile b
     return (aContents == bContents)
 
-{- Take only the file name -}
+-- Take only the file name
 baseName :: String -> String
 baseName = takeWhile (/='.')
 
-{- Drop base name file name -}
+-- Drop base name file name
 fileExt :: String -> String
 fileExt = dropWhile (/='.')
 
-{- Use only tam files -}
+-- Use only tam files
 extType :: String -> Maybe FileType
 extType ".tam" = Just TAM
 extType _ = Nothing
 
-{- turn "abc.tam" into ("abc",TAM) -}
+-- turn "abc.tam" into ("abc",TAM)
 parseFileName :: String -> Maybe (String,FileType)
 parseFileName arg = do
   if isAlpha (head arg)
@@ -37,17 +48,15 @@ parseFileName arg = do
     else
         Nothing
 
-{- handling Maybe Type -}
+-- handling Maybe Type
 unJust :: [Maybe a] -> [a]
 unJust [] = []
 unJust (Nothing:as) = unJust as
 unJust (Just a:as) = a : unJust as
 
-{- parse in files -}
+-- parse in files
 fileNE :: [String] -> [(String,FileType)]
 fileNE = unJust . (map parseFileName)
-
-fileName s = takeWhile (/='/') (reverse s)
 
 main :: IO ()
 main = do

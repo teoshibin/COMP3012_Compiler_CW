@@ -1,12 +1,12 @@
 {-
 
 Compilers Course (COMP3012), 2021
-  Venanzio Capretta
-  Nicolai Kraus
+    Venanzio Capretta
+    Nicolai Kraus
 
-Functional parsing library by Venanzio Capretta,
-based on chapter 13 of "Programming in Haskell" (2nd edition)
-Graham Hutton, Cambridge University Press, 2016.
+    Functional parsing library by Venanzio Capretta,
+    based on chapter 13 of "Programming in Haskell" (2nd edition)
+    Graham Hutton, Cambridge University Press, 2016.
 -}
 
 module FunParser where
@@ -66,9 +66,9 @@ choice :: Alternative f => [f a] -> f a
 choice = foldl (<|>) empty
 
 {-
-Parallel parsing: getting the results of both parsers
-  for ambiguous grammars
-Use with caution: it can cause inefficiency
+    Parallel parsing: getting the results of both parsers
+    for ambiguous grammars
+    Use with caution: it can cause inefficiency
 -}
 
 infixl 3 <||>

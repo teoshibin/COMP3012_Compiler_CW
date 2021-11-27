@@ -2,21 +2,28 @@
 {-
 
 Compilers Course (COMP3012), 2021
-  Venanzio Capretta
-  Nicolai Kraus
+    Venanzio Capretta
+    Nicolai Kraus
 
-TAM Virtual Machine
+Additional Code written by
+    Shi Bin Teo
 
-Minimal implementation by Venanzio Capretta.
-Supports: Arithmetic expressions, Boolean, Relational, and
-Conditional Operators.
+-}
 
+{- 
+    TAM Virtual Machine
+
+    Definition of TAM language
+    Execution of TAM language
+    Parser for TAM language
 -}
 
 module TAM where
 
 import Data.List (intercalate)
 import StateC
+
+
 
 -- ----------------------------- Data Structure ----------------------------- --
 
@@ -60,22 +67,26 @@ data TAMInst
     TAM EXECUTION STATE DEFINITION
 -}
 
-type Stack = [TAMInt]
+type Stack = [TAMInt]      
 type TAMProgram = [TAMInst]
 type Counter = Int
+
 data TAMState = TAMState {
     tsProgram :: TAMProgram,
     tsCounter :: Counter,
     tsStack :: Stack
 } deriving(Eq, Show)
+
 -- TAMState as State Transformer State
 type TAMSt a = StateIO TAMState a
 
 
--- ------------------------ STATE AUXILIARY FUNCTIONS ----------------------- --
+-- ----------------- STATE AUXILIARY FUNCTION FOR EXECUTION ----------------- --
+
+-- function with postfix T are all state transformer for TAMSt
 
 {- 
-    STATE AUXILIARY FUNCTIONS FOR TAMProgram
+    TAMProgram AUXILIARY FUNCTIONS
 -}
 
 -- get program from state
@@ -84,9 +95,21 @@ progGetT = do
     ts <- stGetIO
     return (tsProgram ts)
 
+-- initialize a empty stateIO contianing the program
+initTS :: TAMProgram -> TAMState
+initTS tam = TAMState {tsProgram = tam, tsCounter = 0, tsStack = []}
+
+-- get the counter pointing instruction
+pointedInstT :: TAMSt TAMInst
+pointedInstT = do
+    prog <- progGetT
+    ctr <- ctrGetT
+    return (prog !! ctr)
+
+
 
 {- 
-    STATE AUXILIARY FUNCTIONS FOR Stack
+    Stack AUXILIARY FUNCTIONS
 -}
 
 -- get stack from state
@@ -101,9 +124,44 @@ stkUpdateT stk = do
     ts <- stGetIO
     stUpdateIO (ts {tsStack = stk})
 
+-- pop stack and return a value
+popT :: TAMSt TAMInt
+popT = do
+    stk <- stkGetT
+    stkUpdateT (tail stk)
+    return (head stk)
+
+-- push an input value to stack
+pushT :: TAMInt -> TAMSt ()
+pushT n = do
+    stk <- stkGetT
+    stkUpdateT (n:stk)
+
+-- value retrieval from stack within state via indexing
+stkReadT :: StackAddress -> TAMSt TAMInt
+stkReadT a = do
+    stk <- stkGetT
+    let n = reverse stk !! a
+    return n
+
+-- helper function for stkWriteT
+-- value assignment via indexing
+replaceAtIndex :: Int -> a -> [a] -> [a]    
+replaceAtIndex i x xs = take i xs ++ [x] ++ drop (i+1) xs
+
+-- value assignment to stack within state via indexing
+stkWriteT :: StackAddress -> TAMInt -> TAMSt ()
+stkWriteT a n = do
+    stk <- stkGetT
+    let revStk = reverse stk
+        revStk' = replaceAtIndex a n revStk
+        stk' = reverse revStk'
+    stkUpdateT stk'
+
+
 
 {- 
-    STATE AUXILIARY FUNCTIONS FOR Counter
+    Counter AUXILIARY FUNCTIONS
 -}
 
 -- get counter from state
@@ -118,72 +176,26 @@ ctrUpdateT c = do
     ts <- stGetIO
     stUpdateIO (ts {tsCounter = c})
 
-
--- ------------------------------- Operations ------------------------------- --
-
-{- 
-    PROGRAM OPERATIONS
--}
-
--- initialize a empty stateIO contianing the program
-initTS :: TAMProgram -> TAMState
-initTS tam = TAMState {tsProgram = tam, tsCounter = 0, tsStack = []}
-
--- get the counter pointing instruction
-pointedInstT :: TAMSt TAMInst
-pointedInstT = do
-    prog <- progGetT
-    ctr <- ctrGetT
-    return (prog !! ctr)
-
-
-{- 
-    STACK OPERATIONS
--}
-
--- pop stack and return a value
-popT :: TAMSt TAMInt
-popT = do
-    stk <- stkGetT
-    stkUpdateT (tail stk)
-    return (head stk)
-
--- push an input value to stack
-pushT :: TAMInt -> TAMSt ()
-pushT n = do
-    stk <- stkGetT
-    stkUpdateT (n:stk)
-
--- EXTRA STACK OPERATIONS
-
--- indexing for stack
-stkAddressRead :: StackAddress -> TAMSt TAMInt
-stkAddressRead a = do
-    stk <- stkGetT
-    let n = reverse stk !! a
-    return n
-
--- replace value at given index
-stkAddressWrite :: StackAddress -> TAMInt -> TAMSt ()
-stkAddressWrite a n = do
-    stk <- stkGetT
-    let revStk = reverse stk
-        revStk' = replaceAtIndex a n revStk
-        stk' = reverse revStk'
-    stkUpdateT stk'
-
-replaceAtIndex :: Int -> a -> [a] -> [a]    
-replaceAtIndex i x xs = take i xs ++ [x] ++ drop (i+1) xs
-
-{- 
-    COUNTER OPERATIONS
--}
-
 -- increament the counter by 1
 stepCounterT :: TAMSt ()
 stepCounterT = do
     ctr <- ctrGetT
     ctrUpdateT (ctr + 1)
+
+-- helper function for lCounter
+-- find instruction that match in instruction list
+findInst :: TAMInst -> TAMProgram -> Maybe Counter
+findInst inst prog =
+    let index = length (takeWhile (/= inst) prog)
+    in if index > (length prog - 1) then Nothing else Just index
+
+-- helper function for findLabelT
+-- look for an element in instruction list that match the LabelName and return it's Counter
+lCounter :: LabelName -> TAMProgram -> Counter
+lCounter l prog =
+    case findInst (Label l) prog of
+        Just c -> c
+        Nothing -> error ("Label \"" ++ l ++ "\" not found")
 
 -- find input label within the program and return its counter position
 findLabelT :: LabelName -> TAMSt Counter
@@ -191,103 +203,24 @@ findLabelT l = do
     prog <- progGetT
     return (lCounter l prog)
 
--- counter helper functions
 
--- look for an element in TAMProgram that match the LabelName and return it's Counter
-lCounter :: LabelName -> TAMProgram -> Counter
-lCounter l prog =
-    case findInst (Label l) prog of
-        Just c -> c
-        Nothing -> error ("Label \"" ++ l ++ "\" not found")
 
-findInst :: TAMInst -> TAMProgram -> Maybe Counter
-findInst inst prog =
-    let index = length (takeWhile (/= inst) prog)
-    in if index > (length prog - 1) then Nothing else Just index
-
+-- -------------------------------- EXECUTION ------------------------------- --
 
 {- 
-    EXECUTION OF TAM
+    EXECUTION AUXILIARY FUNCTIONS
 -}
 
--- execute one line of TAM code
-executeOne :: TAMInst -> TAMSt ()
--- stack operations
-executeOne (LOADL n) = do
-    pushT n
-    stepCounterT
-executeOne (LOAD a) = do
-    n <- stkAddressRead a
-    pushT n
-    stepCounterT
-executeOne (STORE a) = do
-    n <- popT
-    stkAddressWrite a n
-    stepCounterT
-executeOne GETINT = do
-    liftIO (putStrLn "input : ")
-    s <- liftIO getLine
-    pushT (read s)
-    stepCounterT
-executeOne PUTINT = do
-    x <- popT
-    liftIO (putStrLn ("output > " ++ show x))
-    stepCounterT
--- flow control
-executeOne (JUMP l) = do
-    c <- findLabelT l
-    ctrUpdateT c
-executeOne (JUMPIFZ l) = do
-    x <- popT
-    if x == 0 then do
-        c <- findLabelT l
-        ctrUpdateT c
-    else
-        stepCounterT
-executeOne (Label _) = stepCounterT
-executeOne HALT = return ()
--- arithmetic operations
-executeOne ADD = cal2value (+)
-executeOne SUB = cal2value (-)
-executeOne MUL = cal2value (*)
-executeOne DIV = cal2value div
-executeOne NEG = cal1value (*(-1))
--- boolean operations
-executeOne AND = cal2value intAND
-executeOne OR = cal2value intOR
-executeOne NOT = cal1value intNOT
--- relational operations
-executeOne LSS = cal2value intLSS
-executeOne GTR = cal2value intGTR
-executeOne EQL = cal2value intEQL
-
--- execute many lines of TAM
-executeMany :: TAMSt Stack
-executeMany = do
-    inst <- pointedInstT
-    executeOne inst
-    if inst == HALT
-        then stkGetT
-        else executeMany
-
--- execute many lines of TAM and return only the stack
-executeTAM :: [TAMInst] -> IO Stack
-executeTAM tam = do
-    (stk,_) <- appIO executeMany (initTS tam)
-    return stk
-
--- EXECUTION OF TAM HELPER FUNCTIONS
-
 -- apply f to 2 pop values then push it
-cal1value :: (TAMInt -> TAMInt) -> TAMSt ()
-cal1value f = do
+cal1valueT :: (TAMInt -> TAMInt) -> TAMSt ()
+cal1valueT f = do
     x <- popT
     pushT (f x)
     stepCounterT
 
 -- apply f to 1 pop values then push it
-cal2value :: (TAMInt -> TAMInt -> TAMInt) -> TAMSt ()
-cal2value f = do
+cal2valueT :: (TAMInt -> TAMInt -> TAMInt) -> TAMSt ()
+cal2valueT f = do
     b <- popT
     a <- popT
     pushT (f a b)
@@ -336,6 +269,81 @@ intGTR = boolInt .< (>)
 intEQL :: TAMInt -> TAMInt -> TAMInt
 intEQL = boolInt .< (==)
 
+
+
+{- 
+    TAM EXECUTION 
+-}
+
+-- execute one line of TAM code
+executeOne :: TAMInst -> TAMSt ()
+-- stack operations
+executeOne (LOADL n) = do
+    pushT n
+    stepCounterT
+executeOne (LOAD a) = do
+    n <- stkReadT a
+    pushT n
+    stepCounterT
+executeOne (STORE a) = do
+    n <- popT
+    stkWriteT a n
+    stepCounterT
+executeOne GETINT = do
+    liftIO (putStrLn "input : ")
+    s <- liftIO getLine
+    pushT (read s)
+    stepCounterT
+executeOne PUTINT = do
+    x <- popT
+    liftIO (putStrLn ("output > " ++ show x))
+    stepCounterT
+-- flow control
+executeOne (JUMP l) = do
+    c <- findLabelT l
+    ctrUpdateT c
+executeOne (JUMPIFZ l) = do
+    x <- popT
+    if x == 0 then do
+        c <- findLabelT l
+        ctrUpdateT c
+    else
+        stepCounterT
+executeOne (Label _) = stepCounterT
+executeOne HALT = return ()
+-- arithmetic operations
+executeOne ADD = cal2valueT (+)
+executeOne SUB = cal2valueT (-)
+executeOne MUL = cal2valueT (*)
+executeOne DIV = cal2valueT div
+executeOne NEG = cal1valueT (*(-1))
+-- boolean operations
+executeOne AND = cal2valueT intAND
+executeOne OR = cal2valueT intOR
+executeOne NOT = cal1valueT intNOT
+-- relational operations
+executeOne LSS = cal2valueT intLSS
+executeOne GTR = cal2valueT intGTR
+executeOne EQL = cal2valueT intEQL
+
+-- execute many lines of TAM
+executeMany :: TAMSt Stack
+executeMany = do
+    inst <- pointedInstT
+    executeOne inst
+    if inst == HALT
+        then stkGetT
+        else executeMany
+
+-- execute many lines of TAM and return only the stack
+executeTAM :: [TAMInst] -> IO Stack
+executeTAM tam = do
+    (stk,_) <- appIO executeMany (initTS tam)
+    return stk
+
+
+
+-- -------------------------------- PARSE TAM ------------------------------- --
 
 -- TODO parse TAM
 
