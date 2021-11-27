@@ -126,7 +126,7 @@ pushT n = do
     stkUpdateT (n:stk)
 
 {- 
-    COUNTER OPERATIONS
+    TODO COUNTER OPERATIONS
 -}
 continueT :: TAMSt ()
 continueT = undefined
@@ -149,7 +149,15 @@ lCounter = undefined
 {- 
     TODO EXECUTION OF TAM
 -}
-
+execute :: TAMInst -> TAMSt ()
+execute HALT = return ()
+execute (LOADL n) = do
+    pushT n
+    continueT
+execute (JUMP l) = do
+    c <- findLabelT l
+    ctrUpdateT c
+execute GETINT = undefined -- NOTE this require IO action
 
 
 {-
