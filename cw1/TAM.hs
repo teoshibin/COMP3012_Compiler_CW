@@ -171,42 +171,33 @@ findLabelT l = do
     prog <- progGetT
     return (lCounter l prog)
 
+-- counter helper functions
 
-{- 
-    COUNTER HELPER FUNCTIONS
--}
-
--- TODO look for an element in TAMProgram that match the LabelName and return it's Counter
+-- look for an element in TAMProgram that match the LabelName and return it's Counter
 lCounter :: LabelName -> TAMProgram -> Counter
-lCounter l prog = 
-    case findLabelIndex l prog 0 of
+lCounter l prog =
+    case findInst (Label l) prog of
         Just c -> c
         Nothing -> error ("Label \"" ++ l ++ "\" not found")
 
-findLabelIndex :: LabelName -> TAMProgram -> Counter -> Maybe Counter
-findLabelIndex l ((Label l'):ps) c
-  | l == l' = Just c
-  | null ps = Nothing
-  | otherwise = findLabelIndex l ps (c+1)
-findLabelIndex l ps c = findLabelIndex l ps (c+1)
-
+findInst :: TAMInst -> TAMProgram -> Maybe Counter
+findInst inst prog =
+    let index = length (takeWhile (/= inst) prog)
+    in if index > (length prog - 1) then Nothing else Just index
 
 
 {- 
-    TODO EXECUTION OF TAM
-    NOTE writing and reading to or from the stack 
-         CAVEAT: the StackAddress 0 or the oldest value is stored at the bottom of the stack
+    EXECUTION OF TAM
 -}
 
 -- execute one line of TAM code
 executeOne :: TAMInst -> TAMSt ()
-executeOne HALT = return ()
+-- stack operations
 executeOne (LOADL n) = do
     pushT n
     stepCounterT
-executeOne (JUMP l) = do
-    c <- findLabelT l
-    ctrUpdateT c
+executeOne (LOAD a) = undefined -- TODO copy value under stack on to stack
+executeOne (STORE a) = undefined -- TODO pop value and store it under the stack
 executeOne GETINT = do
     liftIO (putStrLn "input : ")
     s <- liftIO getLine
@@ -215,6 +206,46 @@ executeOne GETINT = do
 executeOne PUTINT = do
     x <- popT
     liftIO (putStrLn ("output > " ++ show x))
+    stepCounterT
+-- flow control
+executeOne (JUMP l) = do
+    c <- findLabelT l
+    ctrUpdateT c
+executeOne (JUMPIFZ l) = do
+    x <- popT
+    if x == 0 then do
+        c <- findLabelT l
+        ctrUpdateT c
+    else
+        stepCounterT
+executeOne (Label _) = stepCounterT
+executeOne HALT = return ()
+-- arithmetic operations
+executeOne ADD = cal2value (+)
+executeOne SUB = cal2value (-)
+executeOne MUL = cal2value (*)
+executeOne DIV = cal2value div
+executeOne NEG = cal1value (*(-1))
+-- boolean operations
+executeOne AND = cal2value intAND
+executeOne OR = cal2value intOR
+executeOne NOT = cal1value intNOT
+-- relational operations
+executeOne LSS = cal2value intLSS
+executeOne GTR = cal2value intGTR
+executeOne EQL = cal2value intEQL
+
+cal1value :: (TAMInt -> TAMInt) -> TAMSt ()
+cal1value f = do
+    x <- popT
+    pushT (f x)
+    stepCounterT
+
+cal2value :: (TAMInt -> TAMInt -> TAMInt) -> TAMSt ()
+cal2value f = do
+    b <- popT
+    a <- popT
+    pushT (f a b)
     stepCounterT
 
 executeMany :: TAMSt Stack
@@ -225,86 +256,54 @@ executeMany = do
         then stkGetT
         else executeMany
 
-
 exectTAM :: [TAMInst] -> IO Stack
 exectTAM tam = do
     (stk,_) <- appIO executeMany (initTS tam)
     return stk
 
--- execute :: TAMInst -> TAMSt ()
--- execute HALT = return()
--- execute (STORE a) = undefined 
--- execute (PUTINT a) = undefined 
+-- Correspondence between Booleans and integers
+boolInt :: Bool -> TAMInt
+boolInt False = 0
+boolInt True = 1
 
--- execute :: TAMInst -> TAMState -> TAMState
--- exeStep :: TAMState -> TAMState
+-- All non-zero integers correspond to Boolean false
+intBool :: TAMInt -> Bool
+intBool x = x/=0
 
+-- Convenient composition operators
 
-{- 
-    TODO EXECUTION FOR EXPRESSION
--}
+-- Pre-composing with a 2-argument function
+infixr 9 .<
+(.<) :: (b -> c) -> (a -> a -> b) -> a -> a -> c
+g .< f = \ a1 a2 -> g (f a1 a2)
 
--- -- Correspondence between Booleans and integers
--- boolInt :: Bool -> TAMInt
--- boolInt False = 0
--- boolInt True = 1
+-- Post-composing with a 2-argument function
+infixr 9 <.
+(<.) :: (b -> b -> c) -> (a -> b) -> a -> a -> c
+g <. f = \ a1 a2 -> g (f a1) (f a2)
 
--- -- All non-zero integers correspond to Boolean false
--- intBool :: TAMInt -> Bool
--- intBool x = x/=0
+-- Implementation of boolean operations on Integers, always return 0 or 1
 
--- -- Convenient composition operators
+intAND :: TAMInt -> TAMInt -> TAMInt
+intAND = boolInt .< (&&) <. intBool
 
--- -- Pre-composing with a 2-argument function
--- infixr 9 .<
--- (.<) :: (b -> c) -> (a -> a -> b) -> a -> a -> c
--- g .< f = \ a1 a2 -> g (f a1 a2)
+intOR :: TAMInt -> TAMInt -> TAMInt
+intOR = boolInt .< (||) <. intBool
 
--- -- Post-composing with a 2-argument function
--- infixr 9 <.
--- (<.) :: (b -> b -> c) -> (a -> b) -> a -> a -> c
--- g <. f = \ a1 a2 -> g (f a1) (f a2)
+intNOT :: TAMInt -> TAMInt
+intNOT = boolInt . not . intBool
 
+-- Relational operations, return 0 (False) or 1 (True)
 
--- -- Implementation of boolean operations on Integers, always return 0 or 1
+intLSS :: TAMInt -> TAMInt -> TAMInt
+intLSS = boolInt .< (<)
 
--- intAND :: TAMInt -> TAMInt -> TAMInt
--- intAND = boolInt .< (&&) <. intBool
+intGTR :: TAMInt -> TAMInt -> TAMInt
+intGTR = boolInt .< (>)
 
--- intOR :: TAMInt -> TAMInt -> TAMInt
--- intOR = boolInt .< (||) <. intBool
+intEQL :: TAMInt -> TAMInt -> TAMInt
+intEQL = boolInt .< (==)
 
--- intNOT :: TAMInt -> TAMInt
--- intNOT = boolInt . not . intBool
-
--- -- Relational operations, return 0 (False) or 1 (True)
-
--- intLSS :: TAMInt -> TAMInt -> TAMInt
--- intLSS = boolInt .< (<)
-
--- intGTR :: TAMInt -> TAMInt -> TAMInt
--- intGTR = boolInt .< (>)
-
--- intEQL :: TAMInt -> TAMInt -> TAMInt
--- intEQL = boolInt .< (==)
-
--- -- Effect of a single operation on the stack
--- execute :: Stack -> TAMInst -> Stack
--- execute stk (LOADL x) = x : stk
--- -- arithmetic operators
--- execute (x:y:stk) ADD = y+x : stk
--- execute (x:y:stk) SUB = y-x : stk
--- execute (x:y:stk) MUL = y*x : stk
--- execute (x:y:stk) DIV = y `div` x : stk
--- execute (x:stk)   NEG = (-x) : stk
--- -- Boolean operators
--- execute (x:y:stk) AND = y `intAND` x : stk
--- execute (x:y:stk) OR = y `intOR` x : stk
--- execute (x:stk)   NOT = intNOT x : stk
--- -- relational operators
--- execute (x:y:stk) LSS = y `intLSS` x : stk
--- execute (x:y:stk) GTR = y `intGTR` x : stk
--- execute (x:y:stk) EQL = y `intEQL` x : stk
 
 -- -- Executing a TAM program (list of instructions)
 -- execTAM :: Stack -> [TAMInst] -> Stack
