@@ -25,6 +25,7 @@ import TAM
 
 import System.Environment
 import Data.Char
+import MTTAM
 
 {- If input file has extension .exp, compile the expression to TAM code
    If input file has extension .tam, execute tam code
@@ -36,11 +37,21 @@ import Data.Char
    --trace : trace the execution of .tam code
 -}
 
-data FileType = TAM | MT
+data FileType
+    = TAM
+    | MT
     deriving (Eq,Show)
 
-data Option = Trace | Run | Evaluate | Parse | Compile
+data Option
+    = TraceStack
+    | TraceParser
+    | TraceAll
+    | Run
+    | Evaluate
+    | Compile
     deriving (Eq,Show)
+
+
 
 main :: IO ()
 main = do
@@ -49,51 +60,57 @@ main = do
     -- let inputName = head args
     let (fileName,extension) = fileNE args
         ops = options args
-    -- let tamFun :: [TAMInst] -> IO ()
-    --     tamFun = \tam ->
-    --         if Trace `elem` ops
-    --         then do stk <- traceTAM [] tam
-    --                 putStrLn ("Final result: " ++ (show (head stk)))
-    --         else putStrLn ("Executing TAM code: " ++ (show $ head $ execTAM [] tam))
+
+    -- execute tam code and print result with 2 options with trace or without
+    let executeTAMIO :: String -> IO ()
+        executeTAMIO srcTam = do
+            let tam = parseTAM srcTam
+            if TraceStack `elem` ops || TraceAll `elem` ops then do
+                putStrLn "TraceStack is not available"
+                -- stk <- traceTAM [] tam
+                -- putStrLn ("Final result: " ++ (show (head stk)))
+            else do
+                stk <- executeTAM tam
+                putStrLn ("Stack: " ++ show stk)
+                putStrLn ("Result: " ++ show (head stk))
+
+    let compileIO :: String -> IO()
+        compileIO srcMt = do
+            if TraceParser `elem` ops || TraceAll `elem` ops then do
+                let ast = mtParse srcMt
+                    tam = convertAST ast
+                    srcTam = tam2String tam
+                putStrLn ("\nAbstract Syntax Tree: \n" ++ show ast ++ "\n")
+                if null srcTam then
+                    error "Failed to compile this file"
+                else do
+                    writeFile (fileName ++ ".tam") srcTam
+                    putStrLn ("compiled to: " ++ fileName ++ ".tam")
+            else do
+                let srcTam = compileMTTAM srcMt
+                if null srcTam then
+                    error "Failed to compile this file"
+                else do
+                    writeFile (fileName ++ ".tam") srcTam
+                    putStrLn ("compiled to: " ++ fileName ++ ".tam")
 
     case extension of
-        -- TAM -> do
-        --     src <- readFile (fileName++".tam")
-        --     let tam = parseTAM src
-        --     tamFun tam
-
-        -- EXP -> do
-        --   src <- readFile (fileName++".exp")
-        --   if Run `elem` ops
-        --     then tamFun (compMT src)
-        --     else if Evaluate `elem` ops
-        --       then putStrLn ("Evaluating Expression: " ++ show (evaluate (expParse src)))
-        --       else writeFile (fileName++".tam") (compileMTTAM src)
-        --            >> putStrLn ("compiled to TAM file: " ++ fileName ++ ".tam")
+        TAM -> do
+            srcTam <- readFile (fileName++".tam")
+            executeTAMIO srcTam
         MT -> do
-            src <- readFile (fileName++".mt")
-            let dealWithMT
-                    -- COMPILE & EXECUTE
-                    -- | Run `elem` ops = tamFun (compMT src)
-                    -- INTERPRET (PARSE & EXECUTE)
+            srcMt <- readFile (fileName++".mt")
+            let mtdo
+                    | Run `elem` ops = do
+                        compileIO srcMt
+                        srcTam <- readFile (fileName++".tam")
+                        executeTAMIO srcTam
                     | Evaluate `elem` ops = do
                         print "code for evaluate not done yet"
-                        -- TODO call interpreter
-                        -- putStrLn ("Evaluating Expression: " ++ show (evaluate (mtParse src))) 
-                    -- PRINT MT PRINT AST
-                    | Parse `elem` ops = do
-                        putStrLn "\n== Parser =="
-                        putStrLn ("\nMT: \n\n" ++ src)
-                        putStrLn ("\nAST: \n\n" ++ show (mtParse src))
-                    -- COMPILE
-                    | Compile `elem` ops = do
-                        let tamCodes = compileMTTAM src
-                        case compileMTTAM src of
-                            [] -> putStrLn "fail to compile"
-                            tamCodes -> do
-                                writeFile (fileName++".tam") tamCodes
-                                putStrLn ("compiled to TAM file: " ++ fileName ++ ".tam")
-            dealWithMT
+                        -- putStrLn ("Evaluating Expression: " ++ show (evaluate (mtParse src)))
+                    | otherwise = do
+                        compileIO srcMt
+            mtdo
 
 {- 
     IO 
@@ -127,11 +144,11 @@ parseFileName arg = do
         Nothing
 
 parseOption :: String -> Maybe Option
-parseOption "--trace" = Just Trace
+parseOption "--trace-stack" = Just TraceStack
+parseOption "--trace-ast" = Just TraceParser
+parseOption "--trace-all" = Just TraceAll
 parseOption "--run" = Just Run
 parseOption "--evaluate" = Just Evaluate
-parseOption "--parse" = Just Parse
-parseOption "--compile" = Just Compile
 parseOption _ = Nothing
 
 
@@ -141,8 +158,8 @@ unJust (Nothing:as) = unJust as
 unJust (Just a:as) = a : unJust as
 
 options :: [String] -> [Option]
-options = unJust . (map parseOption)
+options = unJust . map parseOption
 
 -- We assume one of the arguments is a file name
 fileNE :: [String] -> (String,FileType)
-fileNE = head . unJust . (map parseFileName)
+fileNE = head . unJust . map parseFileName

@@ -11,7 +11,6 @@ begin
       y := x;
       x := z;
       printint (x);
-      getint (x);
       i := i + 1
     end
 end

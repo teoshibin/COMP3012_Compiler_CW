@@ -67,7 +67,7 @@ data TAMInst
     TAM EXECUTION STATE DEFINITION
 -}
 
-type Stack = [TAMInt]      
+type Stack = [TAMInt]
 type TAMProgram = [TAMInst]
 type Counter = Int
 
@@ -146,7 +146,7 @@ stkReadT a = do
 
 -- helper function for stkWriteT
 -- value assignment via indexing
-replaceAtIndex :: Int -> a -> [a] -> [a]    
+replaceAtIndex :: Int -> a -> [a] -> [a]
 replaceAtIndex i x xs = take i xs ++ [x] ++ drop (i+1) xs
 
 -- value assignment to stack within state via indexing
@@ -347,10 +347,6 @@ executeTAM tam = do
 
 -- TODO parse TAM
 
--- -- Executing a TAM program (list of instructions)
--- execTAM :: Stack -> [TAMInst] -> Stack
--- execTAM = foldl execute
-
 -- -- Generate the trace of the TAM computation
 -- --   list of pairs of instruction and stack after execution of the instruction
 -- execTrace :: Stack -> [TAMInst] -> [(TAMInst,Stack)]
@@ -377,23 +373,40 @@ executeTAM tam = do
 --     putStrLn (printTable traceStr)
 --     return finalStk
 
--- writing out a TAM program
-writeTAM :: [TAMInst] -> String
-writeTAM = foldl (\s inst -> s ++ show inst ++ "\n") ""
+unQuote :: String -> LabelName
+unQuote = filter (/='"')
 
--- -- parsing a TAM program
--- parseTAM :: String -> [TAMInst]
--- parseTAM = pTAM . words where
---     pTAM ("LOADL":x:src) = LOADL (read x) : pTAM src
---     pTAM ("ADD":src) = ADD : pTAM src
---     pTAM ("SUB":src) = SUB : pTAM src
---     pTAM ("MUL":src) = MUL : pTAM src
---     pTAM ("DIV":src) = DIV : pTAM src
---     pTAM ("NEG":src) = NEG : pTAM src
---     pTAM ("AND":src) = AND : pTAM src
---     pTAM ("OR" :src) = OR  : pTAM src
---     pTAM ("NOT":src) = NOT : pTAM src
---     pTAM ("LSS":src) = LSS : pTAM src
---     pTAM ("GTR":src) = GTR : pTAM src
---     pTAM ("EQL":src) = EQL : pTAM src
---     pTAM _ = []
+pTAM :: [String] -> [TAMInst]
+-- stack operations
+pTAM ("LOADL"   :x:src) = LOADL      (read x): pTAM src
+pTAM ("LOAD"    :x:src) = LOAD       (read x): pTAM src
+pTAM ("STORE"   :x:src) = STORE      (read x): pTAM src
+pTAM ("GETINT"    :src) = GETINT             : pTAM src
+pTAM ("PUTINT"    :src) = PUTINT             : pTAM src
+-- flow control
+pTAM ("JUMP"    :x:src) = JUMP    (unQuote x): pTAM src
+pTAM ("JUMPIFZ" :x:src) = JUMPIFZ (unQuote x): pTAM src
+pTAM ("Label"   :x:src) = Label   (unQuote x): pTAM src
+pTAM ("HALT"      : _ ) = [HALT]
+-- arithmetic operations
+pTAM ("ADD"       :src) = ADD                : pTAM src
+pTAM ("SUB"       :src) = SUB                : pTAM src
+pTAM ("MUL"       :src) = MUL                : pTAM src
+pTAM ("DIV"       :src) = DIV                : pTAM src
+pTAM ("NEG"       :src) = NEG                : pTAM src
+-- boolean operations
+pTAM ("AND"       :src) = AND                : pTAM src
+pTAM ("OR"        :src) = OR                 : pTAM src
+pTAM ("NOT"       :src) = NOT                : pTAM src
+-- relational operations
+pTAM ("LSS"       :src) = LSS                : pTAM src
+pTAM ("GTR"       :src) = GTR                : pTAM src
+pTAM ("EQL"       :src) = EQL                : pTAM src
+
+-- parsing a TAM program
+parseTAM :: String -> [TAMInst]
+parseTAM = pTAM . words
+
+-- writing out a TAM program
+tam2String :: [TAMInst] -> String
+tam2String = foldl (\s inst -> s ++ show inst ++ "\n") ""

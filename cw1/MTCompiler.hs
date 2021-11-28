@@ -61,16 +61,14 @@ import MTTAM
 -- unOpEv Negation = negate
 -- unOpEv NegBool  = intNOT
 
--- COMPILER
+
 -- Compiling MT Expressions to TAM
+mt2tam :: String -> [TAMInst]
+mt2tam = convertAST . mtParse
 
-compMT :: String -> [TAMInst]
-compMT = convertAST . mtParse
-
--- reading from a file
-
+-- -- generate string to write to a file
 compileMTTAM :: String -> String
-compileMTTAM = writeTAM . compMT
+compileMTTAM = tam2String . mt2tam
 
 
 
