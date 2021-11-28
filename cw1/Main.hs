@@ -56,6 +56,7 @@ data Option
 main :: IO ()
 main = do
     args <- getArgs
+    putStrLn ""
 
     -- let inputName = head args
     let (fileName,extension) = fileNE args
@@ -65,10 +66,10 @@ main = do
     let executeTAMIO :: String -> IO ()
         executeTAMIO srcTam = do
             let tam = parseTAM srcTam
+            putStrLn ""
             if TraceStack `elem` ops || TraceAll `elem` ops then do
-                putStrLn "TraceStack is not available"
-                -- stk <- traceTAM [] tam
-                -- putStrLn ("Final result: " ++ (show (head stk)))
+                stk <- traceTAM tam
+                putStrLn ("Final result: " ++ show (head stk))
             else do
                 stk <- executeTAM tam
                 putStrLn ("Stack: " ++ show stk)
@@ -85,25 +86,28 @@ main = do
                     error "Failed to compile this file"
                 else do
                     writeFile (fileName ++ ".tam") srcTam
-                    putStrLn ("compiled to: " ++ fileName ++ ".tam")
+                    putStrLn ("Compiled to: " ++ fileName ++ ".tam")
             else do
                 let srcTam = compileMTTAM srcMt
                 if null srcTam then
                     error "Failed to compile this file"
                 else do
                     writeFile (fileName ++ ".tam") srcTam
-                    putStrLn ("compiled to: " ++ fileName ++ ".tam")
+                    putStrLn ("Compiled to: " ++ fileName ++ ".tam")
 
     case extension of
         TAM -> do
             srcTam <- readFile (fileName++".tam")
+            putStrLn ("Execute: " ++ fileName ++ ".tam")
             executeTAMIO srcTam
         MT -> do
-            srcMt <- readFile (fileName++".mt")
+            srcMt <- readFile (fileName ++ ".mt")
+            putStrLn ("Loaded: " ++ fileName ++ ".mt")
             let mtdo
                     | Run `elem` ops = do
                         compileIO srcMt
                         srcTam <- readFile (fileName++".tam")
+                        putStrLn ("Execute: " ++ fileName ++ ".tam")
                         executeTAMIO srcTam
                     | Evaluate `elem` ops = do
                         print "code for evaluate not done yet"
@@ -145,7 +149,7 @@ parseFileName arg = do
 
 parseOption :: String -> Maybe Option
 parseOption "--trace-stack" = Just TraceStack
-parseOption "--trace-ast" = Just TraceParser
+parseOption "--trace-parser" = Just TraceParser
 parseOption "--trace-all" = Just TraceAll
 parseOption "--run" = Just Run
 parseOption "--evaluate" = Just Evaluate

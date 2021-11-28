@@ -22,6 +22,7 @@ module TAM where
 
 import Data.List (intercalate)
 import StateC
+import GlobalFunc
 
 
 
@@ -270,7 +271,6 @@ intEQL :: TAMInt -> TAMInt -> TAMInt
 intEQL = boolInt .< (==)
 
 
-
 {- 
     TAM EXECUTION 
 -}
@@ -290,8 +290,7 @@ executeOne (STORE a) = do
     stkWriteT a n
     stepCounterT
 executeOne GETINT = do
-    liftIO (putStrLn "input : ")
-    s <- liftIO getLine
+    s <- liftIO (prompt "input : ")
     pushT (read s)
     stepCounterT
 executeOne PUTINT = do
@@ -343,35 +342,45 @@ executeTAM tam = do
 
 
 
--- -------------------------------- PARSE TAM ------------------------------- --
-
--- TODO parse TAM
+-- -------------------------- Stack Tracing Execute ------------------------- --
 
 -- -- Generate the trace of the TAM computation
 -- --   list of pairs of instruction and stack after execution of the instruction
--- execTrace :: Stack -> [TAMInst] -> [(TAMInst,Stack)]
--- execTrace stk [] = []
--- execTrace stk (i:is) =
---     let stk' = execute stk i
---         trace' = execTrace stk' is
---     in ((i,stk'):trace')
+execTrace :: [(TAMInst,Stack)] -> TAMSt [(TAMInst,Stack)]
+-- This is equavilant of executeMany but return every single state as a list
+execTrace xs = do
+    inst <- pointedInstT
+    executeOne inst
+    stk <- stkGetT
+    let xs' = (inst, stk):xs
+    if inst == HALT then do
+        return xs'
+    else
+        execTrace xs'
 
--- -- Printing pairs of value in a two-column table
--- printTable :: [(String,String)] -> String
--- printTable pairs = 
---     intercalate "\n" $ map (\(a,b) -> fitStr a ++ b) pairs
---         where   n = maximum (map (length.fst) pairs) + 5
---                 fitStr a = a ++ replicate (n - length a) ' '
+-- Printing pairs of value in a two-column table
+printTable :: [(String,String)] -> String
+printTable pairs = 
+    intercalate "\n" $ map (\(a,b) -> fitStr a ++ b) pairs
+        where   n = maximum (map (length.fst) pairs) + 5
+                fitStr a = a ++ replicate (n - length a) ' '
 
--- -- print the trace of the computation, return the final stack
--- traceTAM :: Stack -> [TAMInst] -> IO Stack
--- traceTAM stk tam = do
---     let trace = execTrace stk tam
---         traceStr = ("Initial stack:", show stk) :
---                     map (\(a,b)->(show a,show b)) trace
---         finalStk = snd (last trace)
---     putStrLn (printTable traceStr)
---     return finalStk
+-- execute many lines of TAM and return only the stack
+traceTAM :: [TAMInst] -> IO Stack
+traceTAM tam = do
+    (trace, _) <- appIO (execTrace []) (initTS tam)
+    let trace' = reverse trace
+        traceStr = 
+            ("Initial stack:","[]") : 
+            map (\(a,b)->(show a,show b)) trace'
+        finalStk = snd (last trace')
+    putStrLn ""
+    putStrLn (printTable traceStr)
+    return finalStk
+
+
+
+-- -------------------------------- PARSE TAM ------------------------------- --
 
 unQuote :: String -> LabelName
 unQuote = filter (/='"')
