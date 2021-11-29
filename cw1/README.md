@@ -9,7 +9,7 @@ A compiler that extanded Arithmetic Expression to Mini Triangle Language using f
     - [Compiler](#compiler)
     - [Scripts](#scripts)
 
-## Files
+## Files related to compiler
 
 1. **FunParser.hs**
 
