@@ -1,3 +1,4 @@
+rem clean and remove all compiled tam during testing
 @echo off
 
 echo.

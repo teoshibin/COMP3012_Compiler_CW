@@ -1,3 +1,4 @@
+rem execute all compilled TAM
 @echo off
 
 echo.

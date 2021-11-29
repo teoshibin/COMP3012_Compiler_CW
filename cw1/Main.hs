@@ -66,17 +66,16 @@ main = do
     let executeTAMIO :: String -> IO ()
         executeTAMIO srcTam = do
             let tam = parseTAM srcTam
-            putStrLn ""
             if TraceStack `elem` ops || TraceAll `elem` ops then do
                 stk <- traceTAM tam
                 putStrLn ("Final result: " ++ show (head stk))
             else do
                 stk <- executeTAM tam
                 putStrLn ("Stack: " ++ show stk)
-                putStrLn ("Result: " ++ show (head stk))
+                putStrLn ("Head: " ++ show (head stk))
 
     -- compile mt save it into tam and print AST if needed
-    let compileIO :: String -> IO()
+    let compileIO :: String -> IO ()
         compileIO srcMt = do
             if TraceParser `elem` ops || TraceAll `elem` ops then do
                 let ast = parseMT srcMt
@@ -112,7 +111,7 @@ main = do
                         putStrLn ("Execute: " ++ fileName ++ ".tam")
                         executeTAMIO srcTam
                     | Evaluate `elem` ops = do
-                        print "code for evaluate is incomplete"
+                        print "Interpreter is incomplete"
                         -- putStrLn ("Evaluating Expression: " ++ show (evaluate (parseMT src)))
                     | otherwise = do
                         compileIO srcMt

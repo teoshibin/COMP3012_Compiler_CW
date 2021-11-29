@@ -1,3 +1,4 @@
+rem compile all MT files into TAM
 @echo off
 
 echo.

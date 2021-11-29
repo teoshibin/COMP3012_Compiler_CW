@@ -1,3 +1,4 @@
+rem compare all TAM files by calling a haskell executable
 @echo off
 
 echo Recompiling testing script...
