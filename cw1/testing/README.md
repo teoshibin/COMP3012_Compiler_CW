@@ -1,7 +1,7 @@
 # Testing
 
 ## Program Files
-This directory contains a couple of test files.
+Program directory contains a couple of test files.
 
 - [test0.mt](test0.mt)   
 - [test1.mt](test1.mt)   
@@ -11,7 +11,7 @@ This directory contains a couple of test files.
 - [test5.mt](test5.mt)   
 
 ## Compiled Program Files
-The above are valid test files for your compiler. The compiler should produce the corresponding files that are also in the directory:
+The compiler should produce files that contain the same TAM program as below:
 
 - [test0_ans.tam](test0_ans.tam) 
 - [test1_ans.tam](test1_ans.tam) 
@@ -27,10 +27,14 @@ The above are valid test files for your compiler. The compiler should produce th
 - test3.tam > input 4 > outputs 2 and 1 (for background, read about the Collatz conjecture)
 - test4.tam > no output 
 - test5.tam > output 100
+
 ## Error Program Files
-- [error1.mt](error1.mt) is not a correct MT program and can't be compiled to TAM code. Your compiler should ideally produce an error message.
-- [error2.mt](error2.mt) has a semicolon that shouldn't be there. Apart from that, it is okay with the convention that `var x` means `var x := 0`. Without the semicolon, it would be fine to treat it as a correct program (not an error). The current version should ideally produce a compile error.
-- [error3.mt](error3.mt) (previously test_6.mt) can't be compiled to TAM code. Ideally, your compiler should produce an error message.
+- [error1.mt](error1.mt)   
+This is not a correct MT program and can't be compiled to TAM code. Your compiler should ideally produce an error message.
+- [error2.mt](error2.mt)   
+This has a semicolon that shouldn't be there. Apart from that, it is okay with the convention that `var x` means `var x := 0`. Without the semicolon, it would be fine to treat it as a correct program (not an error). The current version should ideally produce a compile error.
+- [error3.mt](error3.mt) (previously test_6.mt)   
+This can't be compiled to TAM code. Ideally, your compiler should produce an error message.
 
 
 
