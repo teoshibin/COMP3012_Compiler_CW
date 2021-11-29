@@ -1,0 +1,1 @@
+ghc testing\compareFiles -o testing\cmpf -outputdir tmp

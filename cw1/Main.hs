@@ -16,16 +16,16 @@ Additional Code written by
     Evaluater for MiniTriangle TriangleAbractMachine
 -}
 
-module Main where
+-- module Main where
 
 -- import ExpParser
-import MTParser
-import MTCompiler
+import Parser
+import Compiler
 import TAM
 
 import System.Environment
 import Data.Char
-import MTTAM
+import CodeGen
 
 {- If input file has extension .exp, compile the expression to TAM code
    If input file has extension .tam, execute tam code
@@ -79,8 +79,8 @@ main = do
     let compileIO :: String -> IO()
         compileIO srcMt = do
             if TraceParser `elem` ops || TraceAll `elem` ops then do
-                let ast = mtParse srcMt
-                    tam = convertAST ast
+                let ast = parseMT srcMt
+                    tam = codeGenAST ast
                     srcTam = tam2String tam
                 putStrLn ("\nAbstract Syntax Tree: \n" ++ show ast ++ "\n")
                 if null srcTam then
@@ -113,7 +113,7 @@ main = do
                         executeTAMIO srcTam
                     | Evaluate `elem` ops = do
                         print "code for evaluate not done yet"
-                        -- putStrLn ("Evaluating Expression: " ++ show (evaluate (mtParse src)))
+                        -- putStrLn ("Evaluating Expression: " ++ show (evaluate (parseMT src)))
                     | otherwise = do
                         compileIO srcMt
             mtdo

@@ -15,7 +15,7 @@ A compiler that extanded Arithmetic Expression to Mini Triangle Language using f
 
     Library for Functional Parser
 
-2. **MTParser.hs**
+2. **Parser.hs**
 
     Concrete Implementation of FunParser.
     Define abstract syntax trees of mini triangle.
@@ -24,15 +24,15 @@ A compiler that extanded Arithmetic Expression to Mini Triangle Language using f
 
     Defines TAM programs. Containing parser  & execution function for TAM programs
 
-4. **MTTAM.hs**
+4. **CodeGen.hs**
  
     A code generator for converting the abstract syntax trees into TAM.
 
-5. **MTCompiler.hs**
+5. **Compiler.hs**
 
     Uses all the modules above to define a compiler.
 
-6. **Main.hs**
+6. **main.hs**
 
     Main executable
 
@@ -44,7 +44,7 @@ A compiler that extanded Arithmetic Expression to Mini Triangle Language using f
 
 Run below code or run `cpcpl.bat` to compile the compiler
 ```batch
-    ghc Main -o mtc
+    ghc main -o mtc -outputdir tmp
 ```
 Produces executable compiler that compiles files containing mini triangle and executes TAM code according to file extension. This executable can be used on files with two extensions `.mt` and `.tam`. Files with ending `.mt` in [testing folder](testing) contains mini triangle programs. It can be compiled using below code (add prefix `./` in some other terminal)
 ```batch

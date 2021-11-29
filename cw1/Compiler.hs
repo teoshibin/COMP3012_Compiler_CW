@@ -15,11 +15,11 @@ Additional Code written by
     Compiles simple Arith Expr into TAM programs.
 -}
 
-module MTCompiler where
+module Compiler where
 
 import TAM
-import MTParser
-import MTTAM
+import Parser
+import CodeGen
 
 --INTERPRETER
 -- TODO interpreter
@@ -61,10 +61,13 @@ import MTTAM
 -- unOpEv Negation = negate
 -- unOpEv NegBool  = intNOT
 
+{- 
+    COMPILE FUNCTION
+-}
 
 -- Compiling MT Expressions to TAM
 mt2tam :: String -> [TAMInst]
-mt2tam = convertAST . mtParse
+mt2tam = codeGenAST . parseMT
 
 -- -- generate string to write to a file
 compileMTTAM :: String -> String

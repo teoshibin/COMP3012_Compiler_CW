@@ -1,1 +1,1 @@
-ghc Main -o mtc
+ghc main -o mtc -outputdir tmp

@@ -15,7 +15,7 @@ Additional Code written by
     Parser for MiniTriangle language
 -}
 
-module MTParser where
+module Parser where
 
 import FunParser
 import Control.Applicative
@@ -29,6 +29,8 @@ import Control.Applicative
 
     keywords are reserved and are not valid identifiers / varaible names. 
     let , in , var , if , then , else , while , do , getint , printint , begin , end
+
+    TODO var type
 
     program     ::= 'let' declarations 'in' command
     declaration ::= 'var' identifier | 'var' identifier ':=' expr
@@ -134,8 +136,8 @@ keywordStrings =
 -}
 
 -- parse mini triangle
-mtParse :: String -> AST
-mtParse src = case parse programParser src of
+parseMT :: String -> AST
+parseMT src = case parse programParser src of
     [(t, "")] -> t
     a -> error ("Parser Error: " ++ show a)
 
