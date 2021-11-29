@@ -1,4 +1,9 @@
 
+{-
+
+Stole from stackoverflow
+
+-}
 module GlobalFunc where
     
 import System.IO (stdout, hFlush)

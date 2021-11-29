@@ -2,11 +2,14 @@
 
 A compiler that extanded Arithmetic Expression to Mini Triangle Language using functional parsers.
 
-**Uses Material from:**   
-Compilers COMP3012, University of Nottingham, 2021   
-Venanzio Capretta / Nicolai Kraus   
+## Table of contents
 
-## Contents
+  - [Files](#files)
+  - [Usage](#usage)
+    - [Compiler](#compiler)
+    - [Scripts](#scripts)
+
+## Files
 
 1. **FunParser.hs**
 
@@ -31,65 +34,69 @@ Venanzio Capretta / Nicolai Kraus
 
 6. **Main.hs**
 
-    Main executable, see [usage](##Usage) for extra detail
+    Main executable
 
 7. **Testing Folder**   
-    [MT Program Files and TAM Program Files](testing)
+    [MT Program Files & TAM Program Files](testing)
 
 ## Usage   
-### MT to TAM Compiler
+### Compiler
 
-Main file. You can use a command such as (or run `cpcpl.bat` for the same result, see [details](###Scripts))
+Run below code or run `cpcpl.bat` to compile the compiler
 ```batch
     ghc Main -o mtc
 ```
-Produces executable compiler that compiles files containing mini triangle and executes TAM code according to file extension. This executable can be used on files with two extensions `.mt` and `.tam`. Files with ending `.mt` in [testing folder](testing) containing mini triangle programs. It can be compiled using (add prefix `./` in some other terminal)
+Produces executable compiler that compiles files containing mini triangle and executes TAM code according to file extension. This executable can be used on files with two extensions `.mt` and `.tam`. Files with ending `.mt` in [testing folder](testing) contains mini triangle programs. It can be compiled using below code (add prefix `./` in some other terminal)
 ```batch
-    mtc {filename}.{extension} --{options}
+    mtc {filename}.{extension} {Arguments}
 ```
-- extensions `mt` `tam`
-- options
-    - `trace` can be added while using `run` option to trace execution stack
-    - `run` execute compiled TAM code
-    - `evaluate` interpret `.mt` file without compiling into TAM
-    - `parse` print input strings and print parsed abstract syntax tree
+**Examples** 
+```batch
+    mtc testing/test0.mt
+    mtc testing/test1.mt --run --trace-all
+    mtc testing/test2.mt --evaluate --trace-parser
+    mtc testing/test0.tam --trace-stack
+```
+ **Extensions**   
+ - `mt` 
+ - `tam`   
 
-This should generate a `.tam` file containing the TAM code for `.mt` file. If running `.tam` file it will execute the TAM code and print the final result.   
-
+**Arguments**   
+- Main Args
+    - `no arguments`    
+        Compile `.mt` without executing   
+        Execute `.tam`
+    - `--run`    
+        Execute compiled code   
+    - `--evaluate`   
+        Interpret `.mt` without compiling   
+- Optional Args
+    - `--trace-parser`   
+        Print abstract syntax tree   
+        *Effective when `--run`, `--execute` or `no main argument` is specified for `.mt`*
+    - `--trace-stack`   
+        Trace execution stack   
+        *Effective when `--run` is specified for `.mt`*   
+        *Effective when `no main argement` is specified for `.tam`*
+    - `--trace-all`   
+        Trace all traceable information of given task    
+        *Effectiveness based on individual trace args*   
 
 ### Scripts
-- `cpcpl.bat`   
-    Compile the compiler using this batch or execute the line below
-    ```batch
-        ghc Main -o mtc
-    ```
-
-    Produces executable compiler that compiles files containing mini triangle and executes TAM code according to file extension. This executable can be used on files with two extensions `.mt` and `.tam`. Files with ending `.mt` in [testing folder](testing) containing mini triangle programs. It can be compiled using (add prefix `./` in some other terminal)
-    ```batch
-        mtc {filename}.{extension} --{options}
-    ```
-    - extensions `mt` `tam`
-    - options
-        - `trace` can be added while using `run` option to trace execution stack
-        - `run` execute compiled TAM code
-        - `evaluate` interpret `.mt` file without compiling into TAM
-        - `parse` print input strings and print parsed abstract syntax tree
-        - `compile` compiling MT into TAM without execution
-
-    This should generate a `.tam` file containing the TAM code for `.mt` file. If running `.tam` file it will execute the TAM code and print the final result.
+- `cpcpl.bat`
+    - compile compiler  into `mtc.exe`
 
 - `test.bat`
     - run following in sequence
-        1. `cpall.bat` (`cpcpl.bat` is called in here)
+        1. `cpall.bat` (`cpcpl.bat` is called within here)
         2. `cmpall.bat`
         3. `clnall.bat`
-
 - `cpall.bat`
     - Compile all testing MT programs within [testing folder](testing)   
-    - `cpcpl.bat` will be called by this script by default
-- `cmpall.bat`   
-    - Compare all compiled test MT with answers, e.g compare `test0.tam` `test0_ans.tam`
-    - `CompareFiles.hs` will be recompiled by default
-- `clnall.bat`   
+    - `cpcpl.bat` is called at the beginning of this script by default
+- `cmpall.bat`
+    - Compare all generated TAM against predefined TAM answers
+    - `CompareFiles.hs` will be recompiled at the beginning by default
+- `clnall.bat`
     - remove all compile test MT programs
 

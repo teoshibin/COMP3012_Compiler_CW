@@ -75,6 +75,7 @@ main = do
                 putStrLn ("Stack: " ++ show stk)
                 putStrLn ("Result: " ++ show (head stk))
 
+    -- compile mt save it into tam and print AST if needed
     let compileIO :: String -> IO()
         compileIO srcMt = do
             if TraceParser `elem` ops || TraceAll `elem` ops then do
@@ -95,6 +96,7 @@ main = do
                     writeFile (fileName ++ ".tam") srcTam
                     putStrLn ("Compiled to: " ++ fileName ++ ".tam")
 
+    -- main body of main function
     case extension of
         TAM -> do
             srcTam <- readFile (fileName++".tam")
@@ -116,25 +118,29 @@ main = do
                         compileIO srcMt
             mtdo
 
+
+
 {- 
     IO 
 -}
 
 -- Finding the base name and extension of a file name
-
 baseName :: String -> String
 baseName = takeWhile (/='.')
 
+-- retrieve file extension
 fileExt :: String -> String
 fileExt fn =
     let ext = dropWhile (/='.') fn
     in if ext == "" then ".mt" else ext
 
+-- convert extension type
 extType :: String -> Maybe FileType
 extType ".mt" = Just MT
 extType ".tam" = Just TAM
 extType _ = Nothing
 
+-- parse filename into (basename, extension type)
 parseFileName :: String -> Maybe (String,FileType)
 parseFileName arg = do
   if isAlpha (head arg)
@@ -147,6 +153,7 @@ parseFileName arg = do
     else
         Nothing
 
+-- input arguments
 parseOption :: String -> Maybe Option
 parseOption "--trace-stack" = Just TraceStack
 parseOption "--trace-parser" = Just TraceParser
@@ -154,7 +161,6 @@ parseOption "--trace-all" = Just TraceAll
 parseOption "--run" = Just Run
 parseOption "--evaluate" = Just Evaluate
 parseOption _ = Nothing
-
 
 unJust :: [Maybe a] -> [a]
 unJust [] = []

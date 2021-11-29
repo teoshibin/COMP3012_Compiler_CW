@@ -344,10 +344,10 @@ executeTAM tam = do
 
 -- -------------------------- Stack Tracing Execute ------------------------- --
 
--- -- Generate the trace of the TAM computation
--- --   list of pairs of instruction and stack after execution of the instruction
+-- Generate the trace of the TAM computation
+--   list of pairs of instruction and stack after execution of the instruction
+-- This is equivalent of executeMany but save every single state as a list and return it at the end
 execTrace :: [(TAMInst,Stack)] -> TAMSt [(TAMInst,Stack)]
--- This is equavilant of executeMany but return every single state as a list
 execTrace xs = do
     inst <- pointedInstT
     executeOne inst
@@ -366,6 +366,7 @@ printTable pairs =
                 fitStr a = a ++ replicate (n - length a) ' '
 
 -- execute many lines of TAM and return only the stack
+-- equivalent of executeTAM
 traceTAM :: [TAMInst] -> IO Stack
 traceTAM tam = do
     (trace, _) <- appIO (execTrace []) (initTS tam)
