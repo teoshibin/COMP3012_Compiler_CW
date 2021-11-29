@@ -64,26 +64,26 @@ Produces executable compiler that compiles files containing mini triangle and ex
 **Arguments**   
 - Main Args
     - `no arguments`    
-        Compile `.mt` without executing   
-        Execute `.tam`
+        - Compile `.mt` without executing   
+        - Execute `.tam`
     - `--run`    
-        Execute compiled code for `.mt`   
-        *No effect for `.tam`*
+        - Execute compiled code for `.mt`   
+        - *No effect for `.tam`*
     - `--evaluate`   
-        Interpret `.mt` without compiling   
-        *No effect for `.tam`*
+        - Interpret `.mt` without compiling   
+        - *No effect for `.tam`*
 - Optional Args
     - `--trace-parser`   
-        Print abstract syntax tree   
-        *Effective when passing `.mt`*   
-        *No effect for `.tam`*
+        - Print abstract syntax tree   
+        - *Effective when passing `.mt`*   
+        - *No effect for `.tam`*
     - `--trace-stack`   
-        Trace execution stack   
-        *Effective when `--run` is specified for `.mt`*   
-        *Effective when passing `.tam`*
+        - Trace execution stack   
+        - *Effective when `--run` is specified for `.mt`*   
+        - *Effective when passing `.tam`*
     - `--trace-all`   
-        Trace all traceable information of given task    
-        *Effectiveness based on individual trace args*   
+        - Trace all traceable information of given task    
+        - *Effectiveness based on individual trace args*   
 
 ### Scripts
 - `cpcpl.bat`
