@@ -30,7 +30,7 @@ A compiler that extanded Arithmetic Expression to Mini Triangle Language using f
         * [CodeGen.hs](CodeGen.hs) Compile AST into TAM Instructions
         * [TAM.hs](TAM.hs) TAM Instruction Parsing, Execution and TAM toString Function
         * [Compiler.hs](Compiler.hs) General Function to compile MT into TAM
-        * [main.hs](main.hs) Compiler Command line IO  
+        * [Main.hs](Main.hs) Compiler Command line IO  
 
         *Other*   
         * [cpcpl.bat](cpcpl.bat) Compile Compiler
@@ -43,7 +43,7 @@ A compiler that extanded Arithmetic Expression to Mini Triangle Language using f
 
 Run below code or run `cpcpl.bat` to compile the compiler
 ```batch
-    ghc main -o mtc -outputdir tmp
+    ghc Main -o mtc -outputdir tmp
 ```
 Produces executable compiler that compiles files containing mini triangle and executes TAM code according to file extension. This executable can be used on files with two extensions `.mt` and `.tam`. Files with ending `.mt` in [testing folder](testing) contains mini triangle programs. It can be compiled using below code (add prefix `./` in some other terminal)
 ```batch
@@ -51,10 +51,10 @@ Produces executable compiler that compiles files containing mini triangle and ex
 ```
 **Examples** 
 ```batch
-    mtc testing/test0.mt
-    mtc testing/test1.mt --run --trace-all
-    mtc testing/test2.mt --evaluate --trace-parser
-    mtc testing/test0.tam --trace-stack
+    mtc program/test0.mt
+    mtc program/test1.mt --run --trace-all
+    mtc program/test2.mt --evaluate --trace-parser
+    mtc program/test0.tam --trace-stack
 ```
  **Extensions**   
  - `mt` 
