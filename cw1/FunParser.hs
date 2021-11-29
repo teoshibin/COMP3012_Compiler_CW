@@ -11,8 +11,9 @@ Compilers Course (COMP3012), 2021
 
 module FunParser where
 
-import Control.Applicative
+import Control.Applicative ( Alternative(..) )
 import Data.Char
+    ( isAlpha, isAlphaNum, isDigit, isLower, isSpace, isUpper )
 
 -- Basic definitions
 

@@ -18,7 +18,8 @@ Additional Code written by
 module Parser where
 
 import FunParser
-import Control.Applicative
+    ( choice, identifier, natural, parens, parse, symbol, Parser )
+import Control.Applicative ( Alternative((<|>), empty) )
 
 
 

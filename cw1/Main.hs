@@ -19,13 +19,13 @@ Additional Code written by
 -- module Main where
 
 -- import ExpParser
-import Parser
-import Compiler
-import TAM
+import Parser ( parseMT )
+import Compiler ( compile2Str )
+import TAM ( executeTAM, parseTAM, tam2String, traceTAM )
 
-import System.Environment
-import Data.Char
-import CodeGen
+import System.Environment ( getArgs )
+import Data.Char ( isAlpha )
+import CodeGen ( codeGenAST )
 
 {- If input file has extension .exp, compile the expression to TAM code
    If input file has extension .tam, execute tam code
@@ -89,7 +89,7 @@ main = do
                     writeFile (fileName ++ ".tam") srcTam
                     putStrLn ("Compiled to: " ++ fileName ++ ".tam")
             else do
-                let srcTam = compileMTTAM srcMt
+                let srcTam = compile2Str srcMt
                 if null srcTam then
                     error "Failed to compile this file"
                 else do

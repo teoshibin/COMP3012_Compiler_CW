@@ -18,8 +18,15 @@ Additional Code written by
 module CodeGen where
 
 import Parser
-import TAM
-import StateC
+    ( BinOperator(..),
+      UnOperator(..),
+      Expr(..),
+      Command(..),
+      Declaration(..),
+      AST(..),
+      Identifier )
+import TAM ( LabelName, StackAddress, TAMInst(..) )
+import StateC ( app, stGet, stUpdate, ST )
 
 
 

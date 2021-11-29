@@ -21,8 +21,8 @@ Additional Code written by
 module TAM where
 
 import Data.List (intercalate)
-import StateC
-import GlobalFunc
+import StateC ( appIO, liftIO, stGetIO, stUpdateIO, StateIO )
+import GlobalFunc ( prompt )
 
 
 
