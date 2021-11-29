@@ -67,17 +67,20 @@ Produces executable compiler that compiles files containing mini triangle and ex
         Compile `.mt` without executing   
         Execute `.tam`
     - `--run`    
-        Execute compiled code   
+        Execute compiled code for `.mt`   
+        *No effect for `.tam`*
     - `--evaluate`   
         Interpret `.mt` without compiling   
+        *No effect for `.tam`*
 - Optional Args
     - `--trace-parser`   
         Print abstract syntax tree   
-        *Effective when `--run`, `--execute` or `no main argument` is specified for `.mt`*
+        *Effective when passing `.mt`*   
+        *No effect for `.tam`*
     - `--trace-stack`   
         Trace execution stack   
         *Effective when `--run` is specified for `.mt`*   
-        *Effective when `no main argement` is specified for `.tam`*
+        *Effective when passing `.tam`*
     - `--trace-all`   
         Trace all traceable information of given task    
         *Effectiveness based on individual trace args*   
