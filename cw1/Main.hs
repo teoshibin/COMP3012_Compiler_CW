@@ -112,7 +112,7 @@ main = do
                         putStrLn ("Execute: " ++ fileName ++ ".tam")
                         executeTAMIO srcTam
                     | Evaluate `elem` ops = do
-                        print "code for evaluate not done yet"
+                        print "code for evaluate is incomplete"
                         -- putStrLn ("Evaluating Expression: " ++ show (evaluate (parseMT src)))
                     | otherwise = do
                         compileIO srcMt
