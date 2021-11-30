@@ -68,11 +68,12 @@ main = do
             let tam = parseTAM srcTam
             if TraceStack `elem` ops || TraceAll `elem` ops then do
                 stk <- traceTAM tam
-                putStrLn ("Final result: " ++ show (head stk))
+                putStrLn ("Stack: " ++ show stk)
+                putStrLn ("Top: " ++ show (head stk))
             else do
                 stk <- executeTAM tam
                 putStrLn ("Stack: " ++ show stk)
-                putStrLn ("Head: " ++ show (head stk))
+                putStrLn ("Top: " ++ show (head stk))
 
     -- compile mt save it into tam and print AST if needed
     let compileIO :: String -> IO ()
