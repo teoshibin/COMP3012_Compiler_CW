@@ -2,12 +2,12 @@
 
 A compiler that extanded Arithmetic Expression to Mini Triangle Language using functional parsers.
 
-## Table of contents
-
-  - [Files](#files)
-  - [Usage](#usage)
-    - [Compiler](#compiler)
-    - [Scripts](#scripts)
+## Screenshots
+<p align="center" float="left">
+  <img src="image\fbnc3.jpg" width="232"/>
+  <img src="image\fbnc1.jpg" width="232"/>
+  <img src="image\fbnc2.jpg" width="232"/>
+</p>
 
 ## Folders
 * root/
