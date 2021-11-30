@@ -3,22 +3,22 @@
 ## Program Files
 Program directory contains a couple of test files.
 
-- [test0.mt](test0.mt)   
-- [test1.mt](test1.mt)   
-- [test2.mt](test2.mt)   
-- [test3.mt](test3.mt)   
-- [test4.mt](test4.mt)   
-- [test5.mt](test5.mt)   
+- [test0.mt](..\program\test0.mt)   
+- [test1.mt](..\program\test1.mt)   
+- [test2.mt](..\program\test2.mt)   
+- [test3.mt](..\program\test3.mt)   
+- [test4.mt](..\program\test4.mt)   
+- [test5.mt](..\program\test5.mt)   
 
 ## Compiled Program Files
 The compiler should produce files that contain the same TAM program as below:
 
-- [test0_ans.tam](test0_ans.tam) 
-- [test1_ans.tam](test1_ans.tam) 
-- [test2_ans.tam](test2_ans.tam) 
-- [test3_ans.tam](test3_ans.tam)   
-- [test4_ans.tam](test4_ans.tam)  
-- [test5_ans.tam](test5_ans.tam)   
+- [test0_ans.tam](..\program\test0_ans.tam) 
+- [test1_ans.tam](..\program\test1_ans.tam) 
+- [test2_ans.tam](..\program\test2_ans.tam) 
+- [test3_ans.tam](..\program\test3_ans.tam)   
+- [test4_ans.tam](..\program\test4_ans.tam)  
+- [test5_ans.tam](..\program\test5_ans.tam)   
 
 ## Executed Program Files
 - test0.tam > input 12 > output 479001600
