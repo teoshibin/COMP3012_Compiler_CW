@@ -23,3 +23,6 @@
 <p align="center" float="left">
   <img src="cw1\image\fbnc2.jpg"/>
 </p>
+
+## License
+Licensed under the [MIT License](LICENSE).
