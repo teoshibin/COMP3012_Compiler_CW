@@ -8,10 +8,12 @@
 ## Side Projects
 - [Simple Arith Compiler](simple_arith_compiler)   
     Compile Arith to a simpler version of TAM using simpler but dirty code
-- [Advance Arith Compiler](advance_arith_compiler)   
-    Compile Arith to simpler version of TAM using Functor, Monad & Applicative in Haskell
 - [MT & TAM vscode Extensions](https://github.com/teoshibin/MTTAM_syntax_highlight)   
     Two simple syntax highlighting extensions for my implementation of MiniTriangle and TAM Language in vscode
+
+## Given Template
+- [Advance Arith Compiler](advance_arith_compiler)   
+    Compile Arith to simpler version of TAM using Functor, Monad & Applicative in Haskell
     
 ## Screanshots
 <p align="center" float="left">
